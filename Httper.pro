@@ -7,10 +7,11 @@
 QT += core gui network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++14
+CONFIG += c++11
 TARGET = Httper
 TEMPLATE = app
 
+ICON = ./Images/Httper-icon128x128.icns
 
 SOURCES += main.cpp\
         MainWnd.cpp
@@ -18,3 +19,6 @@ SOURCES += main.cpp\
 HEADERS  += MainWnd.h
 
 FORMS    += MainWnd.ui
+
+RESOURCES += \
+    Resources.qrc

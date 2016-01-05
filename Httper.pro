@@ -14,10 +14,12 @@ TEMPLATE = app
 ICON = ./Images/Httper-icon128x128.icns
 
 SOURCES += main.cpp\
-        MainWnd.cpp
+        MainWnd.cpp \
+    ComboBoxFocusManager.cpp
 
 HEADERS  += MainWnd.h \
-    MWidget.h
+    MWidget.h \
+    ComboBoxFocusManager.h
 
 FORMS    += MainWnd.ui
 

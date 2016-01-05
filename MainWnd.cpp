@@ -1,6 +1,7 @@
 #include "MainWnd.h"
 #include "ui_MainWnd.h"
 #include "MWidget.h"
+#include "ComboBoxFocusManager.h"
 
 #include <QMenu>
 #include <QMessageBox>
@@ -34,7 +35,7 @@ MainWnd::MainWnd()
     setupContentTypes();
     connectSignals();
 
-    ui->statusBar->showMessage(tr("Welcome to Httper"), 5000);
+    ui->statusBar->showMessage(tr("Welcome to Httper"), 3000);
 }
 
 MainWnd::~MainWnd()

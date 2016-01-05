@@ -57,32 +57,6 @@ public:
     QString content;
 };
 
-class ComboBoxFocusManager : public QObject
-{
-    Q_OBJECT
-public:
-    explicit ComboBoxFocusManager(QObject* parent)
-        : QObject(parent)
-    {
-        if (parent)
-            parent->installEventFilter(this);
-    }
-
-    virtual bool eventFilter(QObject* /*obj*/, QEvent* ev) override
-    {
-        if (ev->type() == QEvent::FocusIn)
-            emit gainedFocus();
-        else if (ev->type() == QEvent::FocusOut)
-            emit lostFocus();
-
-        return false;
-    }
-
-signals:
-    void gainedFocus();
-    void lostFocus();
-};
-
 class MainWnd : public QMainWindow
 {
     Q_OBJECT

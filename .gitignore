@@ -6,6 +6,7 @@ Release/
 Debug/
 Profile/
 
+*.autosave
 *.DS_Store
 *.user
 *.so

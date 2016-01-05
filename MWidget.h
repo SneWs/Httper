@@ -2,6 +2,7 @@
 #define MWIDGET_H
 
 #include <QWidget>
+#include <QKeyEvent>
 
 class MWidget : public QWidget
 {
@@ -18,6 +19,15 @@ protected:
     virtual void closeEvent(QCloseEvent*) override
     {
         emit onWidgetClosed(this);
+    }
+
+    virtual void keyPressEvent(QKeyEvent* ev) override
+    {
+        if (ev->modifiers() == Qt::AltModifier)
+        {
+            if (ev->key() == Qt::Key_W)
+                close();
+        }
     }
 
 };

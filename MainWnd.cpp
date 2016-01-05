@@ -2,6 +2,8 @@
 #include "ui_MainWnd.h"
 #include "MWidget.h"
 
+#include <string>
+
 #include <QMenu>
 #include <QMessageBox>
 #include <QWebView>
@@ -11,11 +13,17 @@
 #include <QUrl>
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
+#include <QNetworkConfigurationManager>
+#include <QNetworkCookieJar>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
 MainWnd::MainWnd()
     : QMainWindow(nullptr)
     , ui(new Ui::MainWnd)
     , m_networkManager(nullptr)
+    , m_cookieJar(new QNetworkCookieJar(this))
     , m_activeRequest(nullptr)
     , m_openWebViews()
 {
@@ -25,6 +33,8 @@ MainWnd::MainWnd()
     setupViewAsActions();
     setupVerbs();
     connectSignals();
+
+    ui->statusBar->showMessage(tr("Welcome to Httper"), 5000);
 }
 
 MainWnd::~MainWnd()
@@ -33,6 +43,7 @@ MainWnd::~MainWnd()
         delete view;
     m_openWebViews.clear();
 
+    delete m_cookieJar;
     delete m_activeRequest;
     delete m_networkManager;
 
@@ -74,6 +85,7 @@ void MainWnd::setupVerbs()
 void MainWnd::connectSignals()
 {
     connect(ui->btnSendRequest, SIGNAL(pressed()), this, SLOT(onSendRequestButtonClicked()));
+    connect(ui->btnHeaderAddKeyValue, SIGNAL(pressed()), this, SLOT(onAddHeadersKeyValuePairButtonClicked()));
 }
 
 void MainWnd::onSendRequestButtonClicked()
@@ -92,32 +104,69 @@ void MainWnd::onSendRequestButtonClicked()
         return;
     }
 
+    ui->statusBar->showMessage(tr("Sending Request..."), 0);
     ui->btnSendRequest->setEnabled(false);
     QString verb = getEnteredVerb();
+    QString contentType = getEnteredContentType();
+    QString contentToSend = ui->txtContentToSend->toPlainText().trimmed();
 
     ui->lblResponseUrl->setText(verb + " on " + url.toString());
-    doHttpRequest(url, verb, "");
+    doHttpRequest(url, verb, contentType, contentToSend);
+}
+
+void MainWnd::onAddHeadersKeyValuePairButtonClicked()
+{
+    QString key = ui->txtHeaderKey->text().trimmed();
+    QString value = ui->txtHeaderValue->text().trimmed();
+
+    int newRowIndex = ui->tblHeaders->rowCount();
+
+    // Do we have a row with this key already?
+    auto hits = ui->tblHeaders->findItems(key, Qt::MatchFixedString);
+    if (hits.count() > 0)
+        newRowIndex = hits[0]->row();
+    else
+        ui->tblHeaders->insertRow(newRowIndex);
+
+    QTableWidgetItem* newKeyItem = new QTableWidgetItem(key);
+    QTableWidgetItem* newValueItem = new QTableWidgetItem(value);
+    ui->tblHeaders->setItem(newRowIndex, 0, newKeyItem);
+    ui->tblHeaders->setItem(newRowIndex, 1, newValueItem);
 }
 
 void MainWnd::onViewContentAsActionClicked(QAction* ac)
 {
+    MWidget* view = new MWidget();
+
+    QWebView* webView = new QWebView(view);
+
+    connect(view, SIGNAL(onWidgetClosed(MWidget*)), this, SLOT(onWebViewClosed(MWidget*)));
+    connect(webView, SIGNAL(titleChanged(QString)), view, SLOT(setWindowTitle(QString)));
+
+    m_openWebViews.emplace_back(view);
+
     if (ac->text().compare("Html", Qt::CaseInsensitive) == 0)
-    {
-        MWidget* view = new MWidget();
-
-        QWebView* webView = new QWebView(view);
         webView->setHtml(m_activeRequest->content.toUtf8(), m_activeRequest->url);
-        webView->reload();
+    else if (ac->text().compare("Json", Qt::CaseInsensitive) == 0)
+    {
+        QJsonDocument doc = QJsonDocument::fromJson(m_activeRequest->content.toUtf8());
 
-        connect(view, SIGNAL(onWidgetClosed(MWidget*)), this, SLOT(onWebViewClosed(MWidget*)));
-        connect(webView, SIGNAL(titleChanged(QString)), view, SLOT(setWindowTitle(QString)));
-
-        m_openWebViews.emplace_back(view);
-        view->setLayout(new QGridLayout(view));
-        view->layout()->addWidget(webView);
-        view->setGeometry(100, 100, 800, 600);
-        view->showNormal();
+        QString str = QString::fromUtf8(doc.toJson(QJsonDocument::Indented));
+        qDebug() << "JSON: " << str;
+        webView->settings()->setDefaultTextEncoding("utf-8");
+        webView->setContent(str.toUtf8(), QString("application/json"), m_activeRequest->url);
     }
+    else if (ac->text().compare("Xml", Qt::CaseInsensitive) == 0)
+        webView->setContent(m_activeRequest->content.toUtf8(), QString("application/xml"), m_activeRequest->url);
+
+    //webView->reload();
+    view->setFocusPolicy(Qt::StrongFocus);
+    view->setLayout(new QGridLayout(view));
+    view->layout()->setMargin(0);
+    view->layout()->addWidget(webView);
+    view->setGeometry(100, 100, 800, 600);
+    view->showNormal();
+    view->setFocus();
 }
 
 void MainWnd::onWebViewClosed(MWidget* widget)
@@ -130,14 +179,27 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
 {
     int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 
-    if (statusCode == 301 || 302)
+    if (statusCode == 301 || statusCode == 302)
     {
-        QUrl newUrl = QUrl::fromUserInput(reply->header(QNetworkRequest::LocationHeader).toString());
-        if (newUrl.isValid())
+        QString locationString = reply->rawHeader("Location");
+        if (!locationString.isEmpty())
         {
+            QUrl newUrl = QUrl::fromUserInput(locationString);
+            if (!newUrl.isValid() || newUrl.host().isEmpty())
+            {
+                // Most likely a relative URL
+                newUrl = m_activeRequest->url;
+                newUrl.setPath(locationString);
+
+                if (!newUrl.isValid())
+                    return;
+            }
+
             QString verb = m_activeRequest->verb;
             QString content = m_activeRequest->content;
-            doHttpRequest(newUrl, verb, content);
+            QString contentType = m_activeRequest->contentType;
+
+            doHttpRequest(newUrl, verb, contentType, content);
             return;
         }
     }
@@ -152,13 +214,15 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
     for (const auto& h : reply->rawHeaderPairs())
         ui->txtHeaders->append(h.first + ": " + h.second);
 
-    ui->txtResponseData->setPlainText(reply->readAll());
+    m_activeRequest->content = reply->readAll();
+    ui->txtResponseData->setPlainText(m_activeRequest->content);
 
     if (ui->tabContainer->count() < 2)
         ui->tabContainer->insertTab(1, ui->tabResponse, tr("Response"));
 
     ui->tabContainer->setCurrentIndex(1);
     ui->btnSendRequest->setEnabled(true);
+    ui->statusBar->showMessage(tr("Response Received"), 5000);
 }
 
 void MainWnd::onHttpRequestError(QNetworkReply::NetworkError error)
@@ -177,7 +241,12 @@ QString MainWnd::getEnteredVerb() const
     return ui->drpVerb->currentText();
 }
 
-void MainWnd::doHttpRequest(QUrl url, QString verb, QString content)
+QString MainWnd::getEnteredContentType() const
+{
+    return ui->txtContentType->text().trimmed();
+}
+
+void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString content)
 {
     if (m_activeRequest)
     {
@@ -188,15 +257,38 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString content)
         m_activeRequest = nullptr;
     }
 
-    m_activeRequest = new RequestInfo(url, verb, content);
+    m_activeRequest = new RequestInfo(url, verb, contentType, content);
 
     if (!m_networkManager)
     {
+        QNetworkConfigurationManager manager;
+
         m_networkManager = new QNetworkAccessManager(this);
+        m_networkManager->setConfiguration(manager.defaultConfiguration());
+        m_networkManager->setCookieJar(m_cookieJar);
+
         connect(m_networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onHttpRequestFinished(QNetworkReply*)));
     }
 
-    m_activeRequest->request = m_networkManager->sendCustomRequest(QNetworkRequest(url), "GET", nullptr);
+    qDebug() << "Doing HTTP request " << verb << " " << url;
+    qDebug() << "With Content-Type: " << contentType << " > Using content: ";
+    qDebug() << content;
+
+    QNetworkRequest request(url);
+    if (!content.isEmpty() && verb != "GET")
+    {
+        request.setRawHeader("Content-Type", contentType.toUtf8());
+
+        m_activeRequest->sendBuffer = new QBuffer();
+        m_activeRequest->sendBuffer->open(QBuffer::ReadWrite);
+        m_activeRequest->sendBuffer->write(content.toUtf8());
+
+        // Ensure that the read will begin from the top of the buffer.
+        m_activeRequest->sendBuffer->seek(0);
+    }
+
+    m_activeRequest->request = m_networkManager->sendCustomRequest(request, verb.toUtf8(), m_activeRequest->sendBuffer);
+
     m_activeRequest->request->ignoreSslErrors();
     connect(m_activeRequest->request, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onHttpRequestError(QNetworkReply::NetworkError)));
 }

@@ -251,6 +251,9 @@
                 <property name="minimumContentsLength">
                  <number>1</number>
                 </property>
+                <property name="duplicatesEnabled">
+                 <bool>false</bool>
+                </property>
                </widget>
               </item>
              </layout>
@@ -836,17 +839,19 @@
   <tabstop>tabRequestDetailsContainer</tabstop>
   <tabstop>txtFile</tabstop>
   <tabstop>pushButton</tabstop>
+  <tabstop>drpContentType</tabstop>
   <tabstop>chkBase64Encode</tabstop>
   <tabstop>txtContentToSend</tabstop>
   <tabstop>txtHeaderKey</tabstop>
   <tabstop>txtHeaderValue</tabstop>
   <tabstop>btnHeaderAddKeyValue</tabstop>
   <tabstop>tblHeaders</tabstop>
+  <tabstop>btnHeadersRemoveSelected</tabstop>
   <tabstop>btnSendRequest</tabstop>
-  <tabstop>tabContainer</tabstop>
   <tabstop>txtHeaders</tabstop>
   <tabstop>txtResponseData</tabstop>
   <tabstop>btnViewContentAs</tabstop>
+  <tabstop>tabContainer</tabstop>
  </tabstops>
  <resources>
   <include location="Resources.qrc"/>

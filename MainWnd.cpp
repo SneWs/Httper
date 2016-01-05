@@ -2,11 +2,10 @@
 #include "ui_MainWnd.h"
 #include "MWidget.h"
 
-#include <string>
-
 #include <QMenu>
 #include <QMessageBox>
 #include <QWebView>
+#include <QComboBox>
 
 #include <QString>
 #include <QDebug>
@@ -32,6 +31,7 @@ MainWnd::MainWnd()
     setupTabViews();
     setupViewAsActions();
     setupVerbs();
+    setupContentTypes();
     connectSignals();
 
     ui->statusBar->showMessage(tr("Welcome to Httper"), 5000);
@@ -78,8 +78,22 @@ void MainWnd::setupViewAsActions()
 void MainWnd::setupVerbs()
 {
     ui->drpVerb->addItems(QStringList() << "GET" << "POST" << "PUT" << "DELETE"
-                          << "COPY" << "HEAD" << "MKCOL" << "MOVE"
-                          << "OPTIONS" << "PROPFIND" << "TRACE");
+        << "COPY" << "HEAD" << "MKCOL" << "MOVE"
+        << "OPTIONS" << "PROPFIND" << "TRACE");
+
+    ui->drpVerb->setCurrentIndex(0);
+    connect(new ComboBoxFocusManager(ui->drpVerb), SIGNAL(lostFocus()),
+        this, SLOT(onVerbDropdownLostFocus()));
+}
+
+void MainWnd::setupContentTypes()
+{
+    ui->drpContentType->addItems(QStringList() << "application/json" << "application/xml"
+        << "application/x-www-form-urlencoded");
+
+    ui->drpContentType->setCurrentIndex(0);
+    connect(new ComboBoxFocusManager(ui->drpContentType), SIGNAL(lostFocus()),
+        this, SLOT(onContentTypeDropdownLostFocus()));
 }
 
 void MainWnd::connectSignals()
@@ -115,7 +129,27 @@ void MainWnd::onSendRequestButtonClicked()
     QString contentToSend = ui->txtContentToSend->toPlainText().trimmed();
 
     ui->lblResponseUrl->setText(verb + " on " + url.toString());
-    doHttpRequest(url, verb, contentType, contentToSend);
+    doHttpRequest(url, verb, contentType, contentToSend, getDefinedHeaders());
+}
+
+void MainWnd::onVerbDropdownLostFocus()
+{
+    auto item = ui->drpVerb->currentText();
+    for (auto i = 0; i < ui->drpVerb->count(); i++)
+        if (ui->drpVerb->itemText(i).compare(item, Qt::CaseInsensitive) == 0)
+            return;
+
+    ui->drpVerb->addItem(item);
+}
+
+void MainWnd::onContentTypeDropdownLostFocus()
+{
+    auto item = ui->drpContentType->currentText();
+    for (auto i = 0; i < ui->drpContentType->count(); i++)
+        if (ui->drpContentType->itemText(i).compare(item, Qt::CaseInsensitive) == 0)
+            return;
+
+    ui->drpContentType->addItem(item);
 }
 
 void MainWnd::onAddHeadersKeyValuePairButtonClicked()
@@ -213,13 +247,11 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
                     return;
             }
 
-            QString verb = m_activeRequest->verb;
-            QString content = m_activeRequest->content;
-            QString contentType = m_activeRequest->contentType;
-
             qDebug() << "Redirecting to " << newUrl.toString();
 
-            doHttpRequest(newUrl, verb, contentType, content);
+            doHttpRequest(newUrl, m_activeRequest->verb, m_activeRequest->contentType,
+                m_activeRequest->content, m_activeRequest->headers);
+
             return;
         }
     }
@@ -266,7 +298,23 @@ QString MainWnd::getEnteredContentType() const
     return ui->drpContentType->currentText().trimmed();
 }
 
-void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString content)
+Headers MainWnd::getDefinedHeaders() const
+{
+    Headers retVal;
+
+    auto numRows = ui->tblHeaders->rowCount();
+    for (auto i = 0; i < numRows; i++)
+    {
+        auto key = ui->tblHeaders->item(i, 0)->text();
+        auto value = ui->tblHeaders->item(i, 1)->text();
+
+        retVal[key.toStdString()] = value.toStdString();
+    }
+
+    return retVal;
+}
+
+void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString content, Headers headers)
 {
     if (m_activeRequest)
     {
@@ -278,6 +326,7 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString
     }
 
     m_activeRequest = new RequestInfo(url, verb, contentType, content);
+    m_activeRequest->headers = headers;
 
     if (!m_networkManager)
     {
@@ -295,6 +344,10 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString
     qDebug() << content;
 
     QNetworkRequest request(url);
+
+    for (const auto& header : headers)
+        request.setRawHeader(header.first.c_str(), header.second.c_str());
+
     if (!content.isEmpty() && verb != "GET")
     {
         request.setRawHeader("Content-Type", contentType.toUtf8());

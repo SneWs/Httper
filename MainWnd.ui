@@ -30,6 +30,12 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
+      <property name="tabsClosable">
+       <bool>false</bool>
+      </property>
+      <property name="tabBarAutoHide">
+       <bool>true</bool>
+      </property>
       <widget class="QWidget" name="tabRequest">
        <attribute name="title">
         <string>&amp;Request Builder</string>
@@ -74,7 +80,7 @@
              <set>Qt::ImhUrlCharactersOnly</set>
             </property>
             <property name="text">
-             <string>http://</string>
+             <string>http://example.com</string>
             </property>
             <property name="maxLength">
              <number>2048</number>
@@ -98,9 +104,6 @@
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="buddy">
-             <cstring>txtContentType</cstring>
             </property>
            </widget>
           </item>
@@ -167,7 +170,7 @@
         <item>
          <widget class="QTabWidget" name="tabRequestDetailsContainer">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tabContent">
            <attribute name="title">
@@ -224,14 +227,29 @@
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
                 <property name="buddy">
-                 <cstring>txtContentType</cstring>
+                 <cstring>drpContentType</cstring>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="txtContentType">
-                <property name="text">
+               <widget class="QComboBox" name="drpContentType">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="editable">
+                 <bool>true</bool>
+                </property>
+                <property name="currentText">
                  <string>application/json</string>
+                </property>
+                <property name="maxCount">
+                 <number>256</number>
+                </property>
+                <property name="minimumContentsLength">
+                 <number>1</number>
                 </property>
                </widget>
               </item>
@@ -252,9 +270,6 @@
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-                <property name="buddy">
-                 <cstring>txtContentType</cstring>
                 </property>
                </widget>
               </item>
@@ -287,18 +302,6 @@
             <string>&amp;Headers</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_7">
-            <property name="leftMargin">
-             <number>6</number>
-            </property>
-            <property name="topMargin">
-             <number>6</number>
-            </property>
-            <property name="rightMargin">
-             <number>6</number>
-            </property>
-            <property name="bottomMargin">
-             <number>6</number>
-            </property>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_10">
               <item>
@@ -318,7 +321,7 @@
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                   </property>
                   <property name="buddy">
-                   <cstring>txtUrl</cstring>
+                   <cstring>txtHeaderKey</cstring>
                   </property>
                  </widget>
                 </item>
@@ -356,7 +359,7 @@
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                   </property>
                   <property name="buddy">
-                   <cstring>txtUrl</cstring>
+                   <cstring>txtHeaderValue</cstring>
                   </property>
                  </widget>
                 </item>
@@ -392,6 +395,9 @@
             </item>
             <item>
              <widget class="QTableWidget" name="tblHeaders">
+              <property name="contextMenuPolicy">
+               <enum>Qt::DefaultContextMenu</enum>
+              </property>
               <property name="alternatingRowColors">
                <bool>true</bool>
               </property>
@@ -399,7 +405,7 @@
                <enum>QAbstractItemView::SingleSelection</enum>
               </property>
               <property name="selectionBehavior">
-               <enum>QAbstractItemView::SelectRows</enum>
+               <enum>QAbstractItemView::SelectItems</enum>
               </property>
               <property name="gridStyle">
                <enum>Qt::NoPen</enum>
@@ -440,22 +446,47 @@
               </column>
              </widget>
             </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_11">
+              <item>
+               <spacer name="horizontalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnHeadersRemoveSelected">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>&amp;Remove</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
            </layout>
-          </widget>
-          <widget class="QWidget" name="tabParameters">
-           <attribute name="title">
-            <string>&amp;Parameters</string>
-           </attribute>
           </widget>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="btnSendRequest">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Shortcut &lt;br/&gt;&lt;/span&gt;CTRL+Return&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string>Execute</string>
           </property>
           <property name="shortcut">
-           <string>Return</string>
+           <string>Meta+Return</string>
           </property>
          </widget>
         </item>
@@ -798,6 +829,25 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>txtUrl</tabstop>
+  <tabstop>txtTimeout</tabstop>
+  <tabstop>drpVerb</tabstop>
+  <tabstop>tabRequestDetailsContainer</tabstop>
+  <tabstop>txtFile</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>chkBase64Encode</tabstop>
+  <tabstop>txtContentToSend</tabstop>
+  <tabstop>txtHeaderKey</tabstop>
+  <tabstop>txtHeaderValue</tabstop>
+  <tabstop>btnHeaderAddKeyValue</tabstop>
+  <tabstop>tblHeaders</tabstop>
+  <tabstop>btnSendRequest</tabstop>
+  <tabstop>tabContainer</tabstop>
+  <tabstop>txtHeaders</tabstop>
+  <tabstop>txtResponseData</tabstop>
+  <tabstop>btnViewContentAs</tabstop>
+ </tabstops>
  <resources>
   <include location="Resources.qrc"/>
  </resources>
@@ -815,6 +865,54 @@
     <hint type="destinationlabel">
      <x>359</x>
      <y>338</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>txtFile</sender>
+   <signal>returnPressed()</signal>
+   <receiver>pushButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>511</x>
+     <y>219</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>555</x>
+     <y>220</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>txtHeaderKey</sender>
+   <signal>returnPressed()</signal>
+   <receiver>btnHeaderAddKeyValue</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>281</x>
+     <y>212</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>597</x>
+     <y>217</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>txtHeaderValue</sender>
+   <signal>returnPressed()</signal>
+   <receiver>btnHeaderAddKeyValue</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>424</x>
+     <y>210</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>585</x>
+     <y>210</y>
     </hint>
    </hints>
   </connection>

@@ -15,6 +15,7 @@ class MainWnd;
 
 class MWidget;
 class QWebView;
+class QTableWidgetItem;
 class QNetworkAccessManager;
 class QNetworkCookieJar;
 class QBuffer;
@@ -63,6 +64,8 @@ protected slots:
     void onAddHeadersKeyValuePairButtonClicked();
     void onViewContentAsActionClicked(QAction*);
     void onWebViewClosed(MWidget* widget);
+    void onCurrentHeaderItemSelectionChanged(QTableWidgetItem*, QTableWidgetItem*);
+    void onHeadersRemoveSelectedButtonClicked();
 
     void onHttpRequestFinished(QNetworkReply*);
     void onHttpRequestError(QNetworkReply::NetworkError);

@@ -86,6 +86,13 @@ void MainWnd::connectSignals()
 {
     connect(ui->btnSendRequest, SIGNAL(pressed()), this, SLOT(onSendRequestButtonClicked()));
     connect(ui->btnHeaderAddKeyValue, SIGNAL(pressed()), this, SLOT(onAddHeadersKeyValuePairButtonClicked()));
+
+    // Headers table view
+    connect(ui->tblHeaders, SIGNAL(currentItemChanged(QTableWidgetItem*,QTableWidgetItem*)),
+        this, SLOT(onCurrentHeaderItemSelectionChanged(QTableWidgetItem*, QTableWidgetItem*)));
+
+    // Headers remove item button
+    connect(ui->btnHeadersRemoveSelected, SIGNAL(pressed()), this, SLOT(onHeadersRemoveSelectedButtonClicked()));
 }
 
 void MainWnd::onSendRequestButtonClicked()
@@ -115,6 +122,9 @@ void MainWnd::onAddHeadersKeyValuePairButtonClicked()
 {
     QString key = ui->txtHeaderKey->text().trimmed();
     QString value = ui->txtHeaderValue->text().trimmed();
+
+    if (key.isEmpty())
+        return;
 
     int newRowIndex = ui->tblHeaders->rowCount();
 
@@ -156,7 +166,6 @@ void MainWnd::onViewContentAsActionClicked(QAction* ac)
     else if (ac->text().compare("Xml", Qt::CaseInsensitive) == 0)
         webView->setContent(m_activeRequest->content.toUtf8(), QString("application/xml"), m_activeRequest->url);
 
-    //webView->reload();
     view->setFocusPolicy(Qt::StrongFocus);
     view->setLayout(new QGridLayout(view));
     view->layout()->setMargin(0);
@@ -170,6 +179,18 @@ void MainWnd::onWebViewClosed(MWidget* widget)
 {
     m_openWebViews.erase(std::remove(m_openWebViews.begin(), m_openWebViews.end(), widget), m_openWebViews.end());
     delete widget;
+}
+
+void MainWnd::onCurrentHeaderItemSelectionChanged(QTableWidgetItem* newItem, QTableWidgetItem* /*prevItem*/)
+{
+    ui->btnHeadersRemoveSelected->setEnabled(newItem != nullptr);
+}
+
+void MainWnd::onHeadersRemoveSelectedButtonClicked()
+{
+    auto* item = ui->tblHeaders->currentItem();
+    if (item != nullptr)
+        ui->tblHeaders->removeRow(item->row());
 }
 
 void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
@@ -195,6 +216,8 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
             QString verb = m_activeRequest->verb;
             QString content = m_activeRequest->content;
             QString contentType = m_activeRequest->contentType;
+
+            qDebug() << "Redirecting to " << newUrl.toString();
 
             doHttpRequest(newUrl, verb, contentType, content);
             return;
@@ -240,7 +263,7 @@ QString MainWnd::getEnteredVerb() const
 
 QString MainWnd::getEnteredContentType() const
 {
-    return ui->txtContentType->text().trimmed();
+    return ui->drpContentType->currentText().trimmed();
 }
 
 void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString content)
@@ -280,14 +303,15 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString
         m_activeRequest->sendBuffer->open(QBuffer::ReadWrite);
         m_activeRequest->sendBuffer->write(content.toUtf8());
 
-        // Ensure that the read will begin from the top of the buffer.
+        // Ensure that the read will begin from the start of the buffer.
         m_activeRequest->sendBuffer->seek(0);
     }
 
     m_activeRequest->request = m_networkManager->sendCustomRequest(request, verb.toUtf8(), m_activeRequest->sendBuffer);
 
     m_activeRequest->request->ignoreSslErrors();
-    connect(m_activeRequest->request, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onHttpRequestError(QNetworkReply::NetworkError)));
+    connect(m_activeRequest->request, SIGNAL(error(QNetworkReply::NetworkError)),
+        this, SLOT(onHttpRequestError(QNetworkReply::NetworkError)));
 }
 
 

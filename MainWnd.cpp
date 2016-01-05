@@ -93,9 +93,6 @@ void MainWnd::onSendRequestButtonClicked()
     QUrl url = QUrl::fromUserInput(getEnteredUrl());
     if (!url.isValid() || url.host().isEmpty())
     {
-        // TODO: Add message box etc.
-        qDebug() << "WARNING : Invalid URL!";
-
         QMessageBox msg;
         msg.setText("Invalid URL");
         msg.setWindowTitle("Error");

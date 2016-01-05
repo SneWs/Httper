@@ -1,7 +1,10 @@
 #include "MainWnd.h"
 #include "ui_MainWnd.h"
+#include "MWidget.h"
 
 #include <QMenu>
+#include <QMessageBox>
+#include <QWebView>
 
 #include <QString>
 #include <QDebug>
@@ -14,6 +17,7 @@ MainWnd::MainWnd()
     , ui(new Ui::MainWnd)
     , m_networkManager(nullptr)
     , m_activeRequest(nullptr)
+    , m_openWebViews()
 {
     ui->setupUi(this);
 
@@ -25,10 +29,20 @@ MainWnd::MainWnd()
 
 MainWnd::~MainWnd()
 {
+    for (auto* view : m_openWebViews)
+        delete view;
+    m_openWebViews.clear();
+
     delete m_activeRequest;
     delete m_networkManager;
 
     delete ui;
+}
+
+void MainWnd::closeEvent(QCloseEvent *)
+{
+    for (auto* view : m_openWebViews)
+        view->close();
 }
 
 void MainWnd::setupTabViews()
@@ -46,6 +60,8 @@ void MainWnd::setupViewAsActions()
     menu->addAction("Html");
     ui->btnViewContentAs->setMenu(menu);
     ui->btnViewContentAs->setPopupMode(QToolButton::InstantPopup);
+
+    connect(menu, SIGNAL(triggered(QAction*)), this, SLOT(onViewContentAsActionClicked(QAction*)));
 }
 
 void MainWnd::setupVerbs()
@@ -62,20 +78,52 @@ void MainWnd::connectSignals()
 
 void MainWnd::onSendRequestButtonClicked()
 {
-    ui->btnSendRequest->setEnabled(false);
-
     QUrl url = QUrl::fromUserInput(getEnteredUrl());
-    if (!url.isValid())
+    if (!url.isValid() || url.host().isEmpty())
     {
         // TODO: Add message box etc.
         qDebug() << "WARNING : Invalid URL!";
+
+        QMessageBox msg;
+        msg.setText("Invalid URL");
+        msg.setWindowTitle("Error");
+        msg.exec();
+
         return;
     }
 
-    QString verb = "GET";
+    ui->btnSendRequest->setEnabled(false);
+    QString verb = getEnteredVerb();
 
     ui->lblResponseUrl->setText(verb + " on " + url.toString());
     doHttpRequest(url, verb, "");
+}
+
+void MainWnd::onViewContentAsActionClicked(QAction* ac)
+{
+    if (ac->text().compare("Html", Qt::CaseInsensitive) == 0)
+    {
+        MWidget* view = new MWidget();
+
+        QWebView* webView = new QWebView(view);
+        webView->setHtml(m_activeRequest->content.toUtf8(), m_activeRequest->url);
+        webView->reload();
+
+        connect(view, SIGNAL(onWidgetClosed(MWidget*)), this, SLOT(onWebViewClosed(MWidget*)));
+        connect(webView, SIGNAL(titleChanged(QString)), view, SLOT(setWindowTitle(QString)));
+
+        m_openWebViews.emplace_back(view);
+        view->setLayout(new QGridLayout(view));
+        view->layout()->addWidget(webView);
+        view->setGeometry(100, 100, 800, 600);
+        view->showNormal();
+    }
+}
+
+void MainWnd::onWebViewClosed(MWidget* widget)
+{
+    m_openWebViews.erase(std::remove(m_openWebViews.begin(), m_openWebViews.end(), widget), m_openWebViews.end());
+    delete widget;
 }
 
 void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
@@ -89,10 +137,6 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
         {
             QString verb = m_activeRequest->verb;
             QString content = m_activeRequest->content;
-
-            delete m_activeRequest;
-            m_activeRequest = nullptr;
-
             doHttpRequest(newUrl, verb, content);
             return;
         }
@@ -115,9 +159,6 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
 
     ui->tabContainer->setCurrentIndex(1);
     ui->btnSendRequest->setEnabled(true);
-
-    delete m_activeRequest;
-    m_activeRequest = nullptr;
 }
 
 void MainWnd::onHttpRequestError(QNetworkReply::NetworkError error)
@@ -129,13 +170,23 @@ void MainWnd::onHttpRequestError(QNetworkReply::NetworkError error)
 QString MainWnd::getEnteredUrl() const
 {
     return ui->txtUrl->text().trimmed();
-    emit m_activeRequest->request->finished();
+}
+
+QString MainWnd::getEnteredVerb() const
+{
+    return ui->drpVerb->currentText();
 }
 
 void MainWnd::doHttpRequest(QUrl url, QString verb, QString content)
 {
     if (m_activeRequest)
-        return;
+    {
+        if (!m_activeRequest->request->isFinished())
+            m_activeRequest->request->abort();
+
+        delete m_activeRequest;
+        m_activeRequest = nullptr;
+    }
 
     m_activeRequest = new RequestInfo(url, verb, content);
 

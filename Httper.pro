@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui network
+QT += core gui network webkitwidgets
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -16,7 +16,8 @@ ICON = ./Images/Httper-icon128x128.icns
 SOURCES += main.cpp\
         MainWnd.cpp
 
-HEADERS  += MainWnd.h
+HEADERS  += MainWnd.h \
+    MWidget.h
 
 FORMS    += MainWnd.ui
 

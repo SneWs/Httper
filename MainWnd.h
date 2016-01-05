@@ -2,13 +2,18 @@
 #define MAINWND_H
 
 #include <QMainWindow>
+#include <QAction>
 #include <QNetworkReply>
+
+#include <vector>
 
 namespace Ui
 {
 class MainWnd;
 }
 
+class MWidget;
+class QWebView;
 class QNetworkAccessManager;
 
 class RequestInfo
@@ -40,8 +45,13 @@ public:
     explicit MainWnd();
     ~MainWnd();
 
+protected:
+    virtual void closeEvent(QCloseEvent*) override;
+
 protected slots:
     void onSendRequestButtonClicked();
+    void onViewContentAsActionClicked(QAction*);
+    void onWebViewClosed(MWidget* widget);
 
     void onHttpRequestFinished(QNetworkReply*);
     void onHttpRequestError(QNetworkReply::NetworkError);
@@ -52,6 +62,7 @@ private:
     void setupVerbs();
     void connectSignals();
     QString getEnteredUrl() const;
+    QString getEnteredVerb() const;
 
     void doHttpRequest(QUrl url, QString verb, QString content);
 
@@ -60,6 +71,8 @@ private:
 
     QNetworkAccessManager* m_networkManager;
     RequestInfo* m_activeRequest;
+
+    std::vector<MWidget*> m_openWebViews;
 };
 
 #endif // MAINWND_H

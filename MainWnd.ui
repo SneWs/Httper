@@ -489,7 +489,7 @@
            <string>Execute</string>
           </property>
           <property name="shortcut">
-           <string>Meta+Return</string>
+           <string>Ctrl+Return</string>
           </property>
          </widget>
         </item>
@@ -733,7 +733,7 @@
      <x>0</x>
      <y>0</y>
      <width>672</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="miFile">

@@ -334,7 +334,7 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
 {
     int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 
-    if (statusCode == 301 || statusCode == 302)
+    if (m_settings.followRedirects() && (statusCode == 301 || statusCode == 302))
     {
         QString locationString = reply->rawHeader("Location");
         if (!locationString.isEmpty())

@@ -55,6 +55,13 @@ void MainWnd::loadSettings()
 
     setupVerbs();
     setupContentTypes();
+
+    ui->miEditAutoRedirect->setChecked(m_settings.followRedirects());
+}
+
+void MainWnd::saveSettings()
+{
+    SettingsManager::writeSettings(m_settings);
 }
 
 void MainWnd::closeEvent(QCloseEvent *)
@@ -124,10 +131,9 @@ void MainWnd::connectSignals()
     // Headers remove item button
     connect(ui->btnHeadersRemoveSelected, SIGNAL(pressed()), this, SLOT(onHeadersRemoveSelectedButtonClicked()));
 
-    // Menu items
-
     // Edit menu items
     connect(ui->miEditRemoveAllCookies, SIGNAL(triggered(bool)), this, SLOT(onClearAllCookies()));
+    connect(ui->miEditAutoRedirect, SIGNAL(triggered(bool)), this, SLOT(onToggleFollowRedirects(bool)));
 
     // Window menu items
     connect(ui->miWindowCloseAllButThis, SIGNAL(triggered(bool)), this, SLOT(onCloseAllAdditionalWindowsMenuItemClicked()));
@@ -179,6 +185,9 @@ void MainWnd::onVerbDropdownLostFocus()
             return;
 
     ui->drpVerb->addItem(item);
+
+    m_settings.verbs().push_back(item.toStdString());
+    saveSettings();
 }
 
 void MainWnd::onContentTypeDropdownLostFocus()
@@ -189,6 +198,9 @@ void MainWnd::onContentTypeDropdownLostFocus()
             return;
 
     ui->drpContentType->addItem(item);
+
+    m_settings.contentTypes().push_back(item.toStdString());
+    saveSettings();
 }
 
 void MainWnd::onAddHeadersKeyValuePairButtonClicked()
@@ -277,8 +289,23 @@ void MainWnd::onHeadersRemoveSelectedButtonClicked()
 
 void MainWnd::onClearAllCookies()
 {
+    auto msg = QMessageBox::warning(this, tr("Are you sure"),
+        tr("Are you sure you want to clear all cookies?"), QMessageBox::Yes | QMessageBox::No);
+
+    if (msg != QMessageBox::Yes)
+        return;
+
     qDebug() << "Clearing all cookies from local cookiejar";
     m_cookieJar->removeAll();
+
+    // https://youtu.be/g1uL3xlIUGM?list=RDg1uL3xlIUGM&t=23
+    ui->statusBar->showMessage(tr("The cookie jar is now empty."), 5000);
+}
+
+void MainWnd::onToggleFollowRedirects(bool checked)
+{
+    m_settings.setFollowRedirects(checked);
+    saveSettings();
 }
 
 void MainWnd::onHttpRequestFinished(QNetworkReply* reply)

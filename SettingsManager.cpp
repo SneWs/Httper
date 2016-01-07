@@ -53,7 +53,38 @@ Settings SettingsManager::loadSettings()
 
 void SettingsManager::writeSettings(const Settings& settings)
 {
-    (void)settings;
+    QJsonArray verbs;
+    for (const auto& str : settings.m_verbs)
+        verbs.append(str.c_str());
+
+    QJsonArray contentTypes;
+    for (const auto& str : settings.m_contentTypes)
+        contentTypes.append(str.c_str());
+
+    QJsonObject httper;
+    httper.insert("followRedirects", settings.m_autoFollowRedirects);
+    httper.insert("verbs", verbs);
+    httper.insert("contentTypes", contentTypes);
+
+    QJsonObject jObj;
+    jObj.insert("httper", httper);
+
+    QJsonDocument doc(jObj);
+
+    QString configLocation(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/Httper");
+    QDir configDir(configLocation);
+    if (!configDir.exists())
+    {
+        QDir dir;
+        dir.mkpath(configDir.path());
+    }
+
+    auto path = configDir.filePath(SettingsFilename);
+    QFile settingsFile(path);
+    if (!settingsFile.open(QFile::WriteOnly | QFile::Text))
+        return;
+
+    settingsFile.write(doc.toJson());
 }
 
 QString SettingsManager::readJsonFile()

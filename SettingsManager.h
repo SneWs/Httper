@@ -9,7 +9,7 @@ class SettingsManager
 {
 public:
     static Settings loadSettings();
-    void writeSettings(const Settings& settings);
+    static void writeSettings(const Settings& settings);
 
 private:
     SettingsManager();

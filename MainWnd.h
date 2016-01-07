@@ -69,6 +69,7 @@ public:
     ~MainWnd();
 
     void loadSettings();
+    void saveSettings();
 
 protected:
     virtual void closeEvent(QCloseEvent*) override;
@@ -84,7 +85,9 @@ protected slots:
     void onCurrentHeaderItemSelectionChanged(QTableWidgetItem*, QTableWidgetItem*);
     void onHeadersRemoveSelectedButtonClicked();
 
+    // Menu item actions
     void onClearAllCookies();
+    void onToggleFollowRedirects(bool checked);
 
     void onHttpRequestFinished(QNetworkReply*);
     void onHttpRequestError(QNetworkReply::NetworkError);

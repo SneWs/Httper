@@ -853,7 +853,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Enable Auto Redirect</string>
+    <string>&amp;Follow Redirects</string>
    </property>
   </action>
   <action name="miWindowCloseAllButThis">

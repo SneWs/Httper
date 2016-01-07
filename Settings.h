@@ -13,6 +13,8 @@ public:
     Settings(bool followRedirects, std::vector<std::string>&& verbs,
         std::vector<std::string>&& contentTypes);
 
+    void setFollowRedirects(bool follow) { m_autoFollowRedirects = follow; }
+
     bool followRedirects() const { return m_autoFollowRedirects; }
     std::vector<std::string>& verbs() { return m_verbs; }
     std::vector<std::string>& contentTypes() { return m_contentTypes; }

@@ -33,6 +33,8 @@ MainWnd::MainWnd(Settings settings)
 {
     ui->setupUi(this);
 
+    setWindowIcon(QIcon(":/AppIcon.png"));
+
     setupTabViews();
     setupViewAsActions();
     setupVerbs();

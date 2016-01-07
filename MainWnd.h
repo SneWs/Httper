@@ -1,6 +1,9 @@
 #ifndef MAINWND_H
 #define MAINWND_H
 
+#include "Settings.h"
+#include "SettingsManager.h"
+
 #include <QObject>
 #include <QEvent>
 #include <QMainWindow>
@@ -21,8 +24,9 @@ class MWidget;
 class QWebView;
 class QTableWidgetItem;
 class QNetworkAccessManager;
-class QNetworkCookieJar;
 class QBuffer;
+
+class CookieJar;
 
 typedef std::map<std::string, std::string> Headers;
 
@@ -64,6 +68,8 @@ public:
     explicit MainWnd();
     ~MainWnd();
 
+    void loadSettings();
+
 protected:
     virtual void closeEvent(QCloseEvent*) override;
 
@@ -74,8 +80,11 @@ protected slots:
     void onAddHeadersKeyValuePairButtonClicked();
     void onViewContentAsActionClicked(QAction*);
     void onWebViewClosed(MWidget* widget);
+    void onCloseAllAdditionalWindowsMenuItemClicked();
     void onCurrentHeaderItemSelectionChanged(QTableWidgetItem*, QTableWidgetItem*);
     void onHeadersRemoveSelectedButtonClicked();
+
+    void onClearAllCookies();
 
     void onHttpRequestFinished(QNetworkReply*);
     void onHttpRequestError(QNetworkReply::NetworkError);
@@ -86,6 +95,9 @@ private:
     void setupVerbs();
     void setupContentTypes();
     void connectSignals();
+    void onAdditionalWindowPostAction();
+    void removeAdditionalWindows();
+
     QString getEnteredUrl() const;
     QString getEnteredVerb() const;
     QString getEnteredContentType() const;
@@ -97,9 +109,10 @@ private:
     Ui::MainWnd* ui;
 
     QNetworkAccessManager* m_networkManager;
-    QNetworkCookieJar* m_cookieJar;
+    CookieJar* m_cookieJar;
     RequestInfo* m_activeRequest;
 
+    Settings m_settings;
     std::vector<MWidget*> m_openWebViews;
 };
 

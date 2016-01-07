@@ -1,5 +1,6 @@
 #include "MainWnd.h"
 #include "ui_MainWnd.h"
+#include "CookieJar.h"
 #include "MWidget.h"
 #include "ComboBoxFocusManager.h"
 
@@ -23,16 +24,15 @@ MainWnd::MainWnd()
     : QMainWindow(nullptr)
     , ui(new Ui::MainWnd)
     , m_networkManager(nullptr)
-    , m_cookieJar(new QNetworkCookieJar(this))
+    , m_cookieJar(new CookieJar())
     , m_activeRequest(nullptr)
+    , m_settings()
     , m_openWebViews()
 {
     ui->setupUi(this);
 
     setupTabViews();
     setupViewAsActions();
-    setupVerbs();
-    setupContentTypes();
     connectSignals();
 
     ui->statusBar->showMessage(tr("Welcome to Httper"), 3000);
@@ -40,15 +40,21 @@ MainWnd::MainWnd()
 
 MainWnd::~MainWnd()
 {
-    for (auto* view : m_openWebViews)
-        delete view;
-    m_openWebViews.clear();
+    removeAdditionalWindows();
 
     delete m_cookieJar;
     delete m_activeRequest;
     delete m_networkManager;
 
     delete ui;
+}
+
+void MainWnd::loadSettings()
+{
+    m_settings = SettingsManager::loadSettings();
+
+    setupVerbs();
+    setupContentTypes();
 }
 
 void MainWnd::closeEvent(QCloseEvent *)
@@ -78,21 +84,30 @@ void MainWnd::setupViewAsActions()
 
 void MainWnd::setupVerbs()
 {
-    ui->drpVerb->addItems(QStringList() << "GET" << "POST" << "PUT" << "DELETE"
-        << "COPY" << "HEAD" << "MKCOL" << "MOVE"
-        << "OPTIONS" << "PROPFIND" << "TRACE");
+    auto& verbs = m_settings.verbs();
+    if (verbs.size() > 0)
+    {
+        for (const auto& it : verbs)
+            ui->drpVerb->addItem(it.c_str());
 
-    ui->drpVerb->setCurrentIndex(0);
+        ui->drpVerb->setCurrentIndex(0);
+    }
+
     connect(new ComboBoxFocusManager(ui->drpVerb), SIGNAL(lostFocus()),
         this, SLOT(onVerbDropdownLostFocus()));
 }
 
 void MainWnd::setupContentTypes()
 {
-    ui->drpContentType->addItems(QStringList() << "application/json" << "application/xml"
-        << "application/x-www-form-urlencoded");
+    auto& contentTypes = m_settings.contentTypes();
+    if (contentTypes.size() > 0)
+    {
+        for (const auto& it : contentTypes)
+            ui->drpContentType->addItem(it.c_str());
 
-    ui->drpContentType->setCurrentIndex(0);
+        ui->drpContentType->setCurrentIndex(0);
+    }
+
     connect(new ComboBoxFocusManager(ui->drpContentType), SIGNAL(lostFocus()),
         this, SLOT(onContentTypeDropdownLostFocus()));
 }
@@ -108,6 +123,29 @@ void MainWnd::connectSignals()
 
     // Headers remove item button
     connect(ui->btnHeadersRemoveSelected, SIGNAL(pressed()), this, SLOT(onHeadersRemoveSelectedButtonClicked()));
+
+    // Menu items
+
+    // Edit menu items
+    connect(ui->miEditRemoveAllCookies, SIGNAL(triggered(bool)), this, SLOT(onClearAllCookies()));
+
+    // Window menu items
+    connect(ui->miWindowCloseAllButThis, SIGNAL(triggered(bool)), this, SLOT(onCloseAllAdditionalWindowsMenuItemClicked()));
+}
+
+void MainWnd::onAdditionalWindowPostAction()
+{
+    ui->miWindowCloseAllButThis->setEnabled(m_openWebViews.size() > 0);
+}
+
+void MainWnd::removeAdditionalWindows()
+{
+    // Don't call close here since that will trigger the close callback
+    // causing a double free issue.
+    for (auto* view : m_openWebViews)
+        delete view;
+
+    m_openWebViews.clear();
 }
 
 void MainWnd::onSendRequestButtonClicked()
@@ -208,12 +246,21 @@ void MainWnd::onViewContentAsActionClicked(QAction* ac)
     view->setGeometry(100, 100, 800, 600);
     view->showNormal();
     view->setFocus();
+
+    onAdditionalWindowPostAction();
 }
 
 void MainWnd::onWebViewClosed(MWidget* widget)
 {
     m_openWebViews.erase(std::remove(m_openWebViews.begin(), m_openWebViews.end(), widget), m_openWebViews.end());
     delete widget;
+
+    onAdditionalWindowPostAction();
+}
+
+void MainWnd::onCloseAllAdditionalWindowsMenuItemClicked()
+{
+    removeAdditionalWindows();
 }
 
 void MainWnd::onCurrentHeaderItemSelectionChanged(QTableWidgetItem* newItem, QTableWidgetItem* /*prevItem*/)
@@ -226,6 +273,12 @@ void MainWnd::onHeadersRemoveSelectedButtonClicked()
     auto* item = ui->tblHeaders->currentItem();
     if (item != nullptr)
         ui->tblHeaders->removeRow(item->row());
+}
+
+void MainWnd::onClearAllCookies()
+{
+    qDebug() << "Clearing all cookies from local cookiejar";
+    m_cookieJar->removeAll();
 }
 
 void MainWnd::onHttpRequestFinished(QNetworkReply* reply)

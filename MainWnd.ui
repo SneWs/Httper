@@ -733,7 +733,7 @@
      <x>0</x>
      <y>0</y>
      <width>672</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="miFile">
@@ -759,6 +759,9 @@
      <string>&amp;Edit</string>
     </property>
     <addaction name="miEditSettings"/>
+    <addaction name="miEditRemoveAllCookies"/>
+    <addaction name="separator"/>
+    <addaction name="miEditAutoRedirect"/>
    </widget>
    <widget class="QMenu" name="miView">
     <property name="title">
@@ -771,9 +774,16 @@
     </property>
     <addaction name="miHelpAbout"/>
    </widget>
+   <widget class="QMenu" name="miWindow">
+    <property name="title">
+     <string>&amp;Window</string>
+    </property>
+    <addaction name="miWindowCloseAllButThis"/>
+   </widget>
    <addaction name="miFile"/>
    <addaction name="miEdit"/>
    <addaction name="miView"/>
+   <addaction name="miWindow"/>
    <addaction name="miHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -828,6 +838,30 @@
    </property>
    <property name="text">
     <string>No recent files...</string>
+   </property>
+  </action>
+  <action name="miEditRemoveAllCookies">
+   <property name="text">
+    <string>Clear &amp;Cookies</string>
+   </property>
+  </action>
+  <action name="miEditAutoRedirect">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Auto Redirect</string>
+   </property>
+  </action>
+  <action name="miWindowCloseAllButThis">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Close all but Main Window</string>
    </property>
   </action>
  </widget>

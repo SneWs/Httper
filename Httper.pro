@@ -15,11 +15,17 @@ ICON = ./Images/Httper-icon128x128.icns
 
 SOURCES += main.cpp\
         MainWnd.cpp \
-    ComboBoxFocusManager.cpp
+    ComboBoxFocusManager.cpp \
+    CookieJar.cpp \
+    Settings.cpp \
+    SettingsManager.cpp
 
 HEADERS  += MainWnd.h \
     MWidget.h \
-    ComboBoxFocusManager.h
+    ComboBoxFocusManager.h \
+    CookieJar.h \
+    Settings.h \
+    SettingsManager.h
 
 FORMS    += MainWnd.ui
 

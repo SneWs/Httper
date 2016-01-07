@@ -1,0 +1,18 @@
+{
+	"httper": {
+		"followRedirects": true,
+		"verbs": [
+			"GET",
+			"POST",
+			"PUT",
+			"DELETE",
+			"COPY",
+			"MOVE"
+		],
+		"contentTypes": [
+			"application/json",
+			"application/xml",
+			"application/x-www-form-urlencoded"
+		]
+	}
+}

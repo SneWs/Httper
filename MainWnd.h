@@ -65,10 +65,9 @@ class MainWnd : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MainWnd();
+    explicit MainWnd(Settings settings);
     ~MainWnd();
 
-    void loadSettings();
     void saveSettings();
 
 protected:

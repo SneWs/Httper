@@ -1,15 +1,22 @@
 #include "MainWnd.h"
+#include "Settings.h"
+#include "SettingsManager.h"
+
 #include <QApplication>
 
 int main(int argc, char** argv)
 {
     QApplication a(argc, argv);
 
-    MainWnd w;
+    auto settings = SettingsManager::loadSettings();
 
-    w.loadSettings();
+    MainWnd w(settings);
+
     w.show();
-    w.saveSettings();
 
-    return a.exec();
+    auto status = a.exec();
+    if (status == 0)
+        w.saveSettings();
+
+    return status;
 }

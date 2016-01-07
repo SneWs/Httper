@@ -30,6 +30,7 @@ Settings SettingsManager::loadSettings()
     bool followRedirects = true;
     std::vector<std::string> verbs;
     std::vector<std::string> contentTypes;
+    std::string windowGeometry;
 
     if (httperObj["followRedirects"].isBool())
         followRedirects = httperObj["followRedirects"].toBool();
@@ -48,7 +49,22 @@ Settings SettingsManager::loadSettings()
                 contentTypes.emplace_back(elem.toString().toStdString());
     }
 
-    return std::move(Settings(followRedirects, std::move(verbs), std::move(contentTypes)));
+    Settings settings(followRedirects, std::move(verbs), std::move(contentTypes));
+
+    if (httperObj["window"].isObject())
+    {
+        QJsonObject window = httperObj["window"].toObject();
+        if (window["geometry"].isArray())
+        {
+            QJsonArray geometry = window["geometry"].toArray();
+            settings.m_x = geometry[0].toInt();
+            settings.m_y = geometry[1].toInt();
+            settings.m_w = geometry[2].toInt();
+            settings.m_h = geometry[3].toInt();
+        }
+    }
+
+    return std::move(settings);
 }
 
 void SettingsManager::writeSettings(const Settings& settings)
@@ -61,10 +77,21 @@ void SettingsManager::writeSettings(const Settings& settings)
     for (const auto& str : settings.m_contentTypes)
         contentTypes.append(str.c_str());
 
+    // Window settings
+    QJsonArray geometry;
+    geometry.append(settings.m_x);
+    geometry.append(settings.m_y);
+    geometry.append(settings.m_w);
+    geometry.append(settings.m_h);
+
+    QJsonObject window;
+    window.insert("geometry", geometry);
+
     QJsonObject httper;
     httper.insert("followRedirects", settings.m_autoFollowRedirects);
     httper.insert("verbs", verbs);
     httper.insert("contentTypes", contentTypes);
+    httper.insert("window", window);
 
     QJsonObject jObj;
     jObj.insert("httper", httper);

@@ -759,14 +759,15 @@
      <string>&amp;Edit</string>
     </property>
     <addaction name="miEditSettings"/>
-    <addaction name="miEditRemoveAllCookies"/>
     <addaction name="separator"/>
     <addaction name="miEditAutoRedirect"/>
+    <addaction name="miEditRemoveAllCookies"/>
    </widget>
    <widget class="QMenu" name="miView">
     <property name="title">
      <string>&amp;View</string>
     </property>
+    <addaction name="miViewShowStatusBar"/>
    </widget>
    <widget class="QMenu" name="miHelp">
     <property name="title">
@@ -864,6 +865,17 @@
     <string>&amp;Close all but Main Window</string>
    </property>
   </action>
+  <action name="miViewShowStatusBar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Show Statusbar</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
@@ -952,6 +964,22 @@
     <hint type="destinationlabel">
      <x>585</x>
      <y>210</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>miViewShowStatusBar</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>statusBar</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>335</x>
+     <y>609</y>
     </hint>
    </hints>
   </connection>

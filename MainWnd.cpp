@@ -4,6 +4,7 @@
 #include "MWidget.h"
 #include "ComboBoxFocusManager.h"
 
+#include <QSettings>
 #include <QMenu>
 #include <QMessageBox>
 #include <QWebView>
@@ -20,20 +21,32 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-MainWnd::MainWnd()
+MainWnd::MainWnd(Settings settings)
     : QMainWindow(nullptr)
     , ui(new Ui::MainWnd)
     , m_networkManager(nullptr)
     , m_cookieJar(new CookieJar())
     , m_activeRequest(nullptr)
-    , m_settings()
+    , m_settings(settings)
     , m_openWebViews()
 {
     ui->setupUi(this);
 
     setupTabViews();
     setupViewAsActions();
+    setupVerbs();
+    setupContentTypes();
     connectSignals();
+
+    // Window settings
+
+    if (m_settings.hasWindowSettings())
+    {
+        move(m_settings.getWindowX(), m_settings.getWindowY());
+        resize(m_settings.getWindowWidth(), m_settings.getWindowHeight());
+    }
+
+    ui->miEditAutoRedirect->setChecked(m_settings.followRedirects());
 
     ui->statusBar->showMessage(tr("Welcome to Httper"), 3000);
 }
@@ -49,25 +62,22 @@ MainWnd::~MainWnd()
     delete ui;
 }
 
-void MainWnd::loadSettings()
-{
-    m_settings = SettingsManager::loadSettings();
-
-    setupVerbs();
-    setupContentTypes();
-
-    ui->miEditAutoRedirect->setChecked(m_settings.followRedirects());
-}
-
 void MainWnd::saveSettings()
 {
+    m_settings.setWindowGeometry(pos().x(), pos().y(), width(), height());
+
+    // Write our app logic specific settings.
     SettingsManager::writeSettings(m_settings);
 }
 
-void MainWnd::closeEvent(QCloseEvent *)
+void MainWnd::closeEvent(QCloseEvent* e)
 {
+    //saveSettings();
+
     for (auto* view : m_openWebViews)
         view->close();
+
+    QMainWindow::closeEvent(e);
 }
 
 void MainWnd::setupTabViews()
@@ -447,12 +457,4 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString
     connect(m_activeRequest->request, SIGNAL(error(QNetworkReply::NetworkError)),
         this, SLOT(onHttpRequestError(QNetworkReply::NetworkError)));
 }
-
-
-
-
-
-
-
-
 

@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="Resources.qrc">
-    <normaloff>:/Images/Httper-icon128x128.png</normaloff>:/Images/Httper-icon128x128.png</iconset>
+    <normaloff>:/AppIcon.png</normaloff>:/AppIcon.png</iconset>
   </property>
   <property name="unifiedTitleAndToolBarOnMac">
    <bool>true</bool>
@@ -733,7 +733,7 @@
      <x>0</x>
      <y>0</y>
      <width>672</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="miFile">

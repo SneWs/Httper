@@ -3,6 +3,7 @@
 #include "CookieJar.h"
 #include "MWidget.h"
 #include "ComboBoxFocusManager.h"
+#include "AboutDlg.h"
 
 #include <QSettings>
 #include <QMenu>
@@ -147,6 +148,9 @@ void MainWnd::connectSignals()
 
     // Window menu items
     connect(ui->miWindowCloseAllButThis, SIGNAL(triggered(bool)), this, SLOT(onCloseAllAdditionalWindowsMenuItemClicked()));
+
+    // Help menu items
+    connect(ui->miHelpAbout, SIGNAL(triggered(bool)), this, SLOT(onShowAboutDialog()));
 }
 
 void MainWnd::onAdditionalWindowPostAction()
@@ -316,6 +320,14 @@ void MainWnd::onToggleFollowRedirects(bool checked)
 {
     m_settings.setFollowRedirects(checked);
     saveSettings();
+}
+
+void MainWnd::onShowAboutDialog()
+{
+    AboutDlg dlg(this);
+    dlg.setWindowTitle(tr("About Httper"));
+    dlg.setModal(true);
+    dlg.exec();
 }
 
 void MainWnd::onHttpRequestFinished(QNetworkReply* reply)

@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file>Images/Httper-icon128x128.png</file>
+        <file alias="AppIcon.png">Images/Httper-icon128x128.png</file>
     </qresource>
     <qresource prefix="/settings">
         <file>defaults.json</file>

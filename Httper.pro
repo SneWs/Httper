@@ -18,16 +18,19 @@ SOURCES += main.cpp\
     ComboBoxFocusManager.cpp \
     CookieJar.cpp \
     Settings.cpp \
-    SettingsManager.cpp
+    SettingsManager.cpp \
+    AboutDlg.cpp
 
 HEADERS  += MainWnd.h \
     MWidget.h \
     ComboBoxFocusManager.h \
     CookieJar.h \
     Settings.h \
-    SettingsManager.h
+    SettingsManager.h \
+    AboutDlg.h
 
-FORMS    += MainWnd.ui
+FORMS    += MainWnd.ui \
+    AboutDlg.ui
 
 RESOURCES += \
     Resources.qrc

@@ -87,6 +87,7 @@ protected slots:
     // Menu item actions
     void onClearAllCookies();
     void onToggleFollowRedirects(bool checked);
+    void onShowAboutDialog();
 
     void onHttpRequestFinished(QNetworkReply*);
     void onHttpRequestError(QNetworkReply::NetworkError);

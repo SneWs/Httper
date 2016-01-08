@@ -18,38 +18,36 @@ namespace
 
 Settings SettingsManager::loadSettings()
 {
+    Settings settings;
+
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(readJsonFile().toUtf8(), &error);
     if (error.error != QJsonParseError::NoError)
-        return Settings();
+        return settings;
 
     QJsonObject httperObj = doc.object()["httper"].toObject();
     if (httperObj.isEmpty())
-        return Settings();
-
-    bool followRedirects = true;
-    std::vector<std::string> verbs;
-    std::vector<std::string> contentTypes;
-    std::string windowGeometry;
-
-    if (httperObj["followRedirects"].isBool())
-        followRedirects = httperObj["followRedirects"].toBool();
+        return settings;
 
     if (httperObj["verbs"].isArray())
     {
         for (const auto& elem : httperObj["verbs"].toArray())
             if (elem.isString())
-                verbs.emplace_back(elem.toString().toStdString());
+                settings.m_verbs.emplace_back(elem.toString().toStdString());
     }
 
     if (httperObj["contentTypes"].isArray())
     {
         for (const auto& elem : httperObj["contentTypes"].toArray())
             if (elem.isString())
-                contentTypes.emplace_back(elem.toString().toStdString());
+                settings.m_contentTypes.emplace_back(elem.toString().toStdString());
     }
 
-    Settings settings(followRedirects, std::move(verbs), std::move(contentTypes));
+    if (httperObj["followRedirects"].isBool())
+        settings.m_followRedirects = httperObj["followRedirects"].toBool();
+
+    if (httperObj["lastUsedUrl"].isString())
+        settings.m_lastUsedUrl = httperObj["lastUsedUrl"].toString().toStdString();
 
     if (httperObj["window"].isObject())
     {
@@ -88,7 +86,8 @@ void SettingsManager::writeSettings(const Settings& settings)
     window.insert("geometry", geometry);
 
     QJsonObject httper;
-    httper.insert("followRedirects", settings.m_autoFollowRedirects);
+    httper.insert("followRedirects", settings.m_followRedirects);
+    httper.insert("lastUsedUrl", settings.m_lastUsedUrl.c_str());
     httper.insert("verbs", verbs);
     httper.insert("contentTypes", contentTypes);
     httper.insert("window", window);

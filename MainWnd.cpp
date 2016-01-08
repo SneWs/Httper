@@ -37,19 +37,7 @@ MainWnd::MainWnd(Settings settings)
 
     setupTabViews();
     setupViewAsActions();
-    setupVerbs();
-    setupContentTypes();
     connectSignals();
-
-    // Window settings
-
-    if (m_settings.hasWindowSettings())
-    {
-        move(m_settings.getWindowX(), m_settings.getWindowY());
-        resize(m_settings.getWindowWidth(), m_settings.getWindowHeight());
-    }
-
-    ui->miEditAutoRedirect->setChecked(m_settings.followRedirects());
 
     ui->statusBar->showMessage(tr("Welcome to Httper"), 3000);
 }
@@ -65,8 +53,28 @@ MainWnd::~MainWnd()
     delete ui;
 }
 
+void MainWnd::loadSettings()
+{
+    // Window settings
+    if (m_settings.hasWindowSettings())
+    {
+        move(m_settings.getWindowX(), m_settings.getWindowY());
+        resize(m_settings.getWindowWidth(), m_settings.getWindowHeight());
+    }
+
+    ui->miEditAutoRedirect->setChecked(m_settings.followRedirects());
+
+    std::string& lastUsedUrl = m_settings.lastUsedUrl();
+    if (lastUsedUrl.length() > 0)
+        ui->txtUrl->setText(lastUsedUrl.c_str());
+
+    setupVerbs();
+    setupContentTypes();
+}
+
 void MainWnd::saveSettings()
 {
+    m_settings.setLastUsedUrl(getEnteredUrl().toStdString());
     m_settings.setWindowGeometry(pos().x(), pos().y(), width(), height());
 
     // Write our app logic specific settings.

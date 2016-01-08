@@ -12,6 +12,7 @@ int main(int argc, char** argv)
 
     MainWnd w(settings);
 
+    w.loadSettings();
     w.show();
 
     auto status = a.exec();

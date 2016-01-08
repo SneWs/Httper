@@ -10,14 +10,14 @@ class Settings
 {
 public:
     Settings();
-    Settings(bool followRedirects, std::vector<std::string>&& verbs,
-        std::vector<std::string>&& contentTypes);
 
-    void setFollowRedirects(bool follow) { m_autoFollowRedirects = follow; }
+    void setFollowRedirects(bool follow) { m_followRedirects = follow; }
+    void setLastUsedUrl(const std::string& lastUsedUrl) { m_lastUsedUrl = lastUsedUrl; }
 
-    bool followRedirects() const { return m_autoFollowRedirects; }
+    bool followRedirects() const { return m_followRedirects; }
     std::vector<std::string>& verbs() { return m_verbs; }
     std::vector<std::string>& contentTypes() { return m_contentTypes; }
+    std::string& lastUsedUrl() { return m_lastUsedUrl; }
 
     void setWindowGeometry(int x, int y, int w, int h) { m_x = x; m_y = y; m_w = w; m_h = h; }
     bool hasWindowSettings() const { return m_w > 0 && m_h > 0; }
@@ -28,9 +28,10 @@ public:
     int getWindowWidth() const { return m_w; }
 
 private:
-    bool m_autoFollowRedirects; // Defaults to true
+    bool m_followRedirects; // Defaults to true
     std::vector<std::string> m_verbs; // Accumulated verbs over time
     std::vector<std::string> m_contentTypes; // Accumulated content types over time
+    std::string m_lastUsedUrl;
 
     // Window settings
     int m_x,

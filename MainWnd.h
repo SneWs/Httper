@@ -4,16 +4,17 @@
 #include "Settings.h"
 #include "SettingsManager.h"
 
+#include <string>
+#include <vector>
+#include <map>
+#include <memory>
+
 #include <QObject>
 #include <QEvent>
 #include <QMainWindow>
 #include <QAction>
 #include <QNetworkReply>
 #include <QBuffer>
-
-#include <string>
-#include <vector>
-#include <map>
 
 namespace Ui
 {
@@ -43,17 +44,8 @@ public:
         , content(content_)
     { }
 
-    ~RequestInfo()
-    {
-        delete sendBuffer;
-        sendBuffer = nullptr;
-
-        delete request;
-        request = nullptr;
-    }
-
-    QNetworkReply* request;
-    QBuffer* sendBuffer;
+    std::unique_ptr<QNetworkReply> request;
+    std::unique_ptr<QBuffer> sendBuffer;
     Headers headers;
     QUrl url;
     QString verb;
@@ -110,14 +102,13 @@ private:
     void doHttpRequest(QUrl url, QString verb, QString contentType, QString content, Headers headers);
 
 private:
-    Ui::MainWnd* ui;
-
-    QNetworkAccessManager* m_networkManager;
-    CookieJar* m_cookieJar;
-    RequestInfo* m_activeRequest;
+    std::unique_ptr<Ui::MainWnd> ui;
+    std::unique_ptr<QNetworkAccessManager> m_networkManager;
+    std::unique_ptr<CookieJar> m_cookieJar;
+    std::unique_ptr<RequestInfo> m_activeRequest;
 
     Settings m_settings;
-    std::vector<MWidget*> m_openWebViews;
+    std::vector<std::unique_ptr<MWidget>> m_openWebViews;
 };
 
 #endif // MAINWND_H

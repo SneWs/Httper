@@ -45,12 +45,6 @@ MainWnd::MainWnd(Settings settings)
 MainWnd::~MainWnd()
 {
     removeAdditionalWindows();
-
-    delete m_cookieJar;
-    delete m_activeRequest;
-    delete m_networkManager;
-
-    delete ui;
 }
 
 void MainWnd::loadSettings()
@@ -85,7 +79,7 @@ void MainWnd::closeEvent(QCloseEvent* e)
 {
     //saveSettings();
 
-    for (auto* view : m_openWebViews)
+    for (auto& view : m_openWebViews)
         view->close();
 
     QMainWindow::closeEvent(e);
@@ -165,17 +159,14 @@ void MainWnd::connectSignals()
 
 void MainWnd::onAdditionalWindowPostAction()
 {
+    qDebug() << "Open WebViews : " << m_openWebViews.size();
     ui->miWindowCloseAllButThis->setEnabled(m_openWebViews.size() > 0);
 }
 
 void MainWnd::removeAdditionalWindows()
 {
-    // Don't call close here since that will trigger the close callback
-    // causing a double free issue.
-    for (auto* view : m_openWebViews)
-        delete view;
-
     m_openWebViews.clear();
+    onAdditionalWindowPostAction();
 }
 
 void MainWnd::onSendRequestButtonClicked()
@@ -259,7 +250,7 @@ void MainWnd::onViewContentAsActionClicked(QAction* ac)
     connect(view, SIGNAL(onWidgetClosed(MWidget*)), this, SLOT(onWebViewClosed(MWidget*)));
     connect(webView, SIGNAL(titleChanged(QString)), view, SLOT(setWindowTitle(QString)));
 
-    m_openWebViews.emplace_back(view);
+    m_openWebViews.emplace_back(std::unique_ptr<MWidget>(view));
 
     if (ac->text().compare("Html", Qt::CaseInsensitive) == 0)
         webView->setHtml(m_activeRequest->content.toUtf8(), m_activeRequest->url);
@@ -288,8 +279,11 @@ void MainWnd::onViewContentAsActionClicked(QAction* ac)
 
 void MainWnd::onWebViewClosed(MWidget* widget)
 {
-    m_openWebViews.erase(std::remove(m_openWebViews.begin(), m_openWebViews.end(), widget), m_openWebViews.end());
-    delete widget;
+    auto newEnd = std::remove_if(m_openWebViews.begin(), m_openWebViews.end(), [widget](std::unique_ptr<MWidget>& ptr) {
+        return ptr.get() == widget;
+    });
+
+    m_openWebViews.erase(newEnd, m_openWebViews.end());
 
     onAdditionalWindowPostAction();
 }
@@ -393,7 +387,7 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
 void MainWnd::onHttpRequestError(QNetworkReply::NetworkError error)
 {
     qDebug() << "HTTP Error: " << error;
-    emit m_networkManager->finished(m_activeRequest->request);
+    emit m_networkManager->finished(m_activeRequest->request.get());
 }
 
 QString MainWnd::getEnteredUrl() const
@@ -429,27 +423,24 @@ Headers MainWnd::getDefinedHeaders() const
 
 void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString content, Headers headers)
 {
-    if (m_activeRequest)
+    if (m_activeRequest.get())
     {
         if (!m_activeRequest->request->isFinished())
             m_activeRequest->request->abort();
-
-        delete m_activeRequest;
-        m_activeRequest = nullptr;
     }
 
-    m_activeRequest = new RequestInfo(url, verb, contentType, content);
+    m_activeRequest.reset(new RequestInfo(url, verb, contentType, content));
     m_activeRequest->headers = headers;
 
-    if (!m_networkManager)
+    if (!m_networkManager.get())
     {
+        m_networkManager.reset(new QNetworkAccessManager(this));
+
         QNetworkConfigurationManager manager;
-
-        m_networkManager = new QNetworkAccessManager(this);
         m_networkManager->setConfiguration(manager.defaultConfiguration());
-        m_networkManager->setCookieJar(m_cookieJar);
+        m_networkManager->setCookieJar(m_cookieJar.get());
 
-        connect(m_networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onHttpRequestFinished(QNetworkReply*)));
+        connect(m_networkManager.get(), SIGNAL(finished(QNetworkReply*)), this, SLOT(onHttpRequestFinished(QNetworkReply*)));
     }
 
     qDebug() << "Doing HTTP request " << verb << " " << url;
@@ -465,7 +456,7 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString
     {
         request.setRawHeader("Content-Type", contentType.toUtf8());
 
-        m_activeRequest->sendBuffer = new QBuffer();
+        m_activeRequest->sendBuffer.reset(new QBuffer());
         m_activeRequest->sendBuffer->open(QBuffer::ReadWrite);
         m_activeRequest->sendBuffer->write(content.toUtf8());
 
@@ -473,10 +464,10 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString
         m_activeRequest->sendBuffer->seek(0);
     }
 
-    m_activeRequest->request = m_networkManager->sendCustomRequest(request, verb.toUtf8(), m_activeRequest->sendBuffer);
+    m_activeRequest->request.reset(m_networkManager->sendCustomRequest(request, verb.toUtf8(), m_activeRequest->sendBuffer.get()));
 
     m_activeRequest->request->ignoreSslErrors();
-    connect(m_activeRequest->request, SIGNAL(error(QNetworkReply::NetworkError)),
+    connect(m_activeRequest->request.get(), SIGNAL(error(QNetworkReply::NetworkError)),
         this, SLOT(onHttpRequestError(QNetworkReply::NetworkError)));
 }
 

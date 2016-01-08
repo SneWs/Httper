@@ -7,7 +7,8 @@
 QT += core gui network webkitwidgets
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++14
+QMAKE_CXXFLAGS_CXX11 = -std=c++14
+CONFIG += c++11
 
 # Hack for OSX to make C++14 work
 macx: {

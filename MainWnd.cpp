@@ -26,7 +26,7 @@ MainWnd::MainWnd(Settings settings)
     : QMainWindow(nullptr)
     , ui(new Ui::MainWnd)
     , m_networkManager(nullptr)
-    , m_cookieJar(new CookieJar())
+    , m_cookieJar(std::make_unique<CookieJar>())
     , m_activeRequest(nullptr)
     , m_settings(settings)
     , m_openWebViews()
@@ -429,12 +429,12 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString
             m_activeRequest->request->abort();
     }
 
-    m_activeRequest.reset(new RequestInfo(url, verb, contentType, content));
+    m_activeRequest = std::make_unique<RequestInfo>(url, verb, contentType, content);
     m_activeRequest->headers = headers;
 
     if (!m_networkManager.get())
     {
-        m_networkManager.reset(new QNetworkAccessManager(this));
+        m_networkManager = std::make_unique<QNetworkAccessManager>(this);
 
         QNetworkConfigurationManager manager;
         m_networkManager->setConfiguration(manager.defaultConfiguration());
@@ -456,7 +456,7 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString
     {
         request.setRawHeader("Content-Type", contentType.toUtf8());
 
-        m_activeRequest->sendBuffer.reset(new QBuffer());
+        m_activeRequest->sendBuffer = std::make_unique<QBuffer>();
         m_activeRequest->sendBuffer->open(QBuffer::ReadWrite);
         m_activeRequest->sendBuffer->write(content.toUtf8());
 

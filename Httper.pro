@@ -42,3 +42,4 @@ FORMS    += MainWnd.ui \
 
 RESOURCES += \
     Resources.qrc
+

@@ -47,7 +47,7 @@ MainWnd::~MainWnd()
     removeAdditionalWindows();
 }
 
-void MainWnd::loadSettings()
+void MainWnd::applySettings()
 {
     // Window settings
     if (m_settings.hasWindowSettings())

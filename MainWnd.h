@@ -60,7 +60,7 @@ public:
     explicit MainWnd(Settings settings);
     ~MainWnd();
 
-    void loadSettings();
+    void applySettings();
     void saveSettings();
 
 protected:

@@ -86,6 +86,7 @@ protected slots:
     void onHttpRequestError(QNetworkReply::NetworkError);
 
 private:
+    void afterSettingsApplied();
     void setupTabViews();
     void setupViewAsActions();
     void setupVerbs();

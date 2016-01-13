@@ -38,8 +38,6 @@ MainWnd::MainWnd(Settings settings)
     setupTabViews();
     setupViewAsActions();
     connectSignals();
-
-    ui->statusBar->showMessage(tr("Welcome to Httper"), 3000);
 }
 
 MainWnd::~MainWnd()
@@ -64,6 +62,8 @@ void MainWnd::applySettings()
 
     setupVerbs();
     setupContentTypes();
+
+    afterSettingsApplied();
 }
 
 void MainWnd::saveSettings()
@@ -376,6 +376,9 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
     m_activeRequest->content = reply->readAll();
     ui->txtResponseData->setPlainText(m_activeRequest->content);
 
+    bool hasContent = m_activeRequest->content.size();
+    ui->btnViewContentAs->setEnabled(hasContent);
+
     if (ui->tabContainer->count() < 2)
         ui->tabContainer->insertTab(1, ui->tabResponse, tr("Response"));
 
@@ -388,6 +391,12 @@ void MainWnd::onHttpRequestError(QNetworkReply::NetworkError error)
 {
     qDebug() << "HTTP Error: " << error;
     emit m_networkManager->finished(m_activeRequest->request.get());
+}
+
+void MainWnd::afterSettingsApplied()
+{
+    ui->statusBar->showMessage(tr("Welcome to Httper"), 3000);
+    qApp->processEvents();
 }
 
 QString MainWnd::getEnteredUrl() const

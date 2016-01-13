@@ -421,7 +421,8 @@ Headers MainWnd::getDefinedHeaders() const
     return retVal;
 }
 
-void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString content, Headers headers)
+void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType,
+    QString content, Headers headers)
 {
     if (m_activeRequest.get())
     {
@@ -443,12 +444,7 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType, QString
         connect(m_networkManager.get(), SIGNAL(finished(QNetworkReply*)), this, SLOT(onHttpRequestFinished(QNetworkReply*)));
     }
 
-    qDebug() << "Doing HTTP request " << verb << " " << url;
-    qDebug() << "With Content-Type: " << contentType << " > Using content: ";
-    qDebug() << content;
-
     QNetworkRequest request(url);
-
     for (const auto& header : headers)
         request.setRawHeader(header.first.c_str(), header.second.c_str());
 

@@ -62,7 +62,7 @@ Settings SettingsManager::loadSettings()
         }
     }
 
-    return std::move(settings);
+    return settings;
 }
 
 void SettingsManager::writeSettings(const Settings& settings)

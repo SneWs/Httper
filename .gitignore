@@ -14,3 +14,5 @@ Profile/
 *.obj
 *.bin
 
+Makefile
+Makefile.*

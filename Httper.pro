@@ -7,7 +7,10 @@
 QT += core gui network webkitwidgets
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-QMAKE_CXXFLAGS_CXX11 = -std=c++14
+!win32 {
+    QMAKE_CXXFLAGS_CXX11 = -std=c++14
+}
+
 CONFIG += c++11
 
 # Hack for OSX to make C++14 work
@@ -18,6 +21,21 @@ macx: {
 
 TARGET = Httper
 TEMPLATE = app
+
+CONFIG(debug, debug|release) {
+    DESTDIR = Bin/Debug
+    OBJECTS_DIR = Bin/Debug
+    MOC_DIR = Bin/Debug
+    RCC_DIR = Bin/Debug
+    UI_DIR = Bin/Debug
+}
+else {
+    DESTDIR = Bin/Release
+    OBJECTS_DIR = Bin/Release
+    MOC_DIR = Bin/Release
+    RCC_DIR = Bin/Release
+    UI_DIR = Bin/Release
+}
 
 ICON = ./Images/Httper-icon128x128.icns
 

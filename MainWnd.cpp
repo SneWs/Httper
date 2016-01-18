@@ -77,8 +77,6 @@ void MainWnd::saveSettings()
 
 void MainWnd::closeEvent(QCloseEvent* e)
 {
-    //saveSettings();
-
     for (auto& view : m_openWebViews)
         view->close();
 

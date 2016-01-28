@@ -22,6 +22,25 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+namespace
+{
+    std::map<std::string, std::string> g_supportedTextContentTypes;
+
+    static bool isSupportedContentType(const char* contentType)
+    {
+        std::string actualType(contentType);
+        auto contentPos = actualType.find_first_of(';');
+        if (contentPos !=  std::string::npos)
+            actualType = std::string(actualType.begin(), actualType.begin() + contentPos);
+
+        for (const auto& str : g_supportedTextContentTypes)
+            if (str.second == actualType)
+                return true;
+
+        return false;
+    }
+}
+
 MainWnd::MainWnd(Settings settings)
     : QMainWindow(nullptr)
     , ui(new Ui::MainWnd)
@@ -34,6 +53,11 @@ MainWnd::MainWnd(Settings settings)
     ui->setupUi(this);
 
     setWindowIcon(QIcon(":/AppIcon.png"));
+
+    g_supportedTextContentTypes["Plain Text"] = "text/plain";
+    g_supportedTextContentTypes["Html"] = "text/html";
+    g_supportedTextContentTypes["Json"] = "application/json";
+    g_supportedTextContentTypes["Xml"] = "application/xml";
 
     setupTabViews();
     setupViewAsActions();
@@ -93,9 +117,9 @@ void MainWnd::setupTabViews()
 void MainWnd::setupViewAsActions()
 {
     QMenu* menu = new QMenu(ui->btnViewContentAs);
-    menu->addAction("Json");
-    menu->addAction("Xml");
-    menu->addAction("Html");
+    for (const auto& str : g_supportedTextContentTypes)
+        menu->addAction(str.first.c_str());
+
     ui->btnViewContentAs->setMenu(menu);
     ui->btnViewContentAs->setPopupMode(QToolButton::InstantPopup);
 
@@ -180,6 +204,8 @@ void MainWnd::onSendRequestButtonClicked()
         return;
     }
 
+    ui->txtResponseData->setPlainText("");
+
     ui->statusBar->showMessage(tr("Sending Request..."), 0);
     ui->btnSendRequest->setEnabled(false);
     QString verb = getEnteredVerb();
@@ -242,12 +268,31 @@ void MainWnd::onAddHeadersKeyValuePairButtonClicked()
 void MainWnd::onViewContentAsActionClicked(QAction* ac)
 {
     MWidget* view = new MWidget();
-
-    QWebView* webView = new QWebView(view);
+    view->setFocusPolicy(Qt::StrongFocus);
+    view->setLayout(new QGridLayout(view));
+    view->layout()->setMargin(0);
+    view->setGeometry(100, 100, 800, 600);
 
     connect(view, SIGNAL(onWidgetClosed(MWidget*)), this, SLOT(onWebViewClosed(MWidget*)));
-    connect(webView, SIGNAL(titleChanged(QString)), view, SLOT(setWindowTitle(QString)));
 
+    // Special case handling for plain text
+    if (ac->text().compare("Plain Text", Qt::CaseInsensitive) == 0)
+    {
+        QPlainTextEdit* txt = new QPlainTextEdit(view);
+        txt->setReadOnly(true);
+        txt->setPlainText(m_activeRequest->content);
+        m_openWebViews.emplace_back(std::unique_ptr<MWidget>(view));
+
+        view->layout()->addWidget(txt);
+        view->showNormal();
+        view->setFocus();
+
+        onAdditionalWindowPostAction();
+        return;
+    }
+
+    QWebView* webView = new QWebView(view);
+    connect(webView, SIGNAL(titleChanged(QString)), view, SLOT(setWindowTitle(QString)));
     m_openWebViews.emplace_back(std::unique_ptr<MWidget>(view));
 
     if (ac->text().compare("Html", Qt::CaseInsensitive) == 0)
@@ -264,11 +309,7 @@ void MainWnd::onViewContentAsActionClicked(QAction* ac)
     else if (ac->text().compare("Xml", Qt::CaseInsensitive) == 0)
         webView->setContent(m_activeRequest->content.toUtf8(), QString("application/xml"), m_activeRequest->url);
 
-    view->setFocusPolicy(Qt::StrongFocus);
-    view->setLayout(new QGridLayout(view));
-    view->layout()->setMargin(0);
     view->layout()->addWidget(webView);
-    view->setGeometry(100, 100, 800, 600);
     view->showNormal();
     view->setFocus();
 
@@ -372,7 +413,8 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
         ui->txtHeaders->append(h.first + ": " + h.second);
 
     m_activeRequest->content = reply->readAll();
-    ui->txtResponseData->setPlainText(m_activeRequest->content);
+    if (isSupportedContentType(reply->header(QNetworkRequest::ContentTypeHeader).toString().toUtf8()))
+        ui->txtResponseData->setPlainText(m_activeRequest->content);
 
     bool hasContent = m_activeRequest->content.size();
     ui->btnViewContentAs->setEnabled(hasContent);

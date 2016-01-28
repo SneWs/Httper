@@ -26,16 +26,40 @@ namespace
 {
     std::map<std::string, std::string> g_supportedTextContentTypes;
 
-    static bool isSupportedContentType(const char* contentType)
+    static bool isContentTypeText(const char* contentType)
     {
         std::string actualType(contentType);
         auto contentPos = actualType.find_first_of(';');
         if (contentPos !=  std::string::npos)
             actualType = std::string(actualType.begin(), actualType.begin() + contentPos);
 
-        for (const auto& str : g_supportedTextContentTypes)
-            if (str.second == actualType)
-                return true;
+        if (actualType.find("image/") == std::string::npos)
+        {
+            for (const auto& str : g_supportedTextContentTypes)
+            {
+                if (str.second == actualType)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    static bool isContentTypeImage(const char* contentType)
+    {
+        std::string actualType(contentType);
+        auto contentPos = actualType.find_first_of(';');
+        if (contentPos !=  std::string::npos)
+            actualType = std::string(actualType.begin(), actualType.begin() + contentPos);
+
+        if (actualType.find("image/") != std::string::npos)
+        {
+            for (const auto& str : g_supportedTextContentTypes)
+            {
+                if (str.second == actualType)
+                    return true;
+            }
+        }
 
         return false;
     }
@@ -58,6 +82,10 @@ MainWnd::MainWnd(Settings settings)
     g_supportedTextContentTypes["Html"] = "text/html";
     g_supportedTextContentTypes["Json"] = "application/json";
     g_supportedTextContentTypes["Xml"] = "application/xml";
+    g_supportedTextContentTypes["Png"] = "image/png";
+    g_supportedTextContentTypes["Jpg"] = "image/jpg";
+    g_supportedTextContentTypes["Jpeg"] = "image/jpeg";
+    g_supportedTextContentTypes["Gif"] = "image/gif";
 
     setupTabViews();
     setupViewAsActions();
@@ -117,8 +145,13 @@ void MainWnd::setupTabViews()
 void MainWnd::setupViewAsActions()
 {
     QMenu* menu = new QMenu(ui->btnViewContentAs);
-    for (const auto& str : g_supportedTextContentTypes)
-        menu->addAction(str.first.c_str());
+    menu->addAction("Plain Text");
+    menu->addSeparator();
+    menu->addAction("Html");
+    menu->addAction("Json");
+    menu->addAction("Xml");
+    menu->addSeparator();
+    menu->addAction("Image");
 
     ui->btnViewContentAs->setMenu(menu);
     ui->btnViewContentAs->setPopupMode(QToolButton::InstantPopup);
@@ -275,7 +308,7 @@ void MainWnd::onViewContentAsActionClicked(QAction* ac)
 
     connect(view, SIGNAL(onWidgetClosed(MWidget*)), this, SLOT(onWebViewClosed(MWidget*)));
 
-    // Special case handling for plain text
+    // Special case handling for plain text and images
     if (ac->text().compare("Plain Text", Qt::CaseInsensitive) == 0)
     {
         QPlainTextEdit* txt = new QPlainTextEdit(view);
@@ -308,6 +341,8 @@ void MainWnd::onViewContentAsActionClicked(QAction* ac)
     }
     else if (ac->text().compare("Xml", Qt::CaseInsensitive) == 0)
         webView->setContent(m_activeRequest->content.toUtf8(), QString("application/xml"), m_activeRequest->url);
+    else if (ac->text().compare("Image", Qt::CaseInsensitive) == 0)
+        webView->setUrl(m_activeRequest->url);
 
     view->layout()->addWidget(webView);
     view->showNormal();
@@ -412,11 +447,23 @@ void MainWnd::onHttpRequestFinished(QNetworkReply* reply)
     for (const auto& h : reply->rawHeaderPairs())
         ui->txtHeaders->append(h.first + ": " + h.second);
 
-    m_activeRequest->content = reply->readAll();
-    if (isSupportedContentType(reply->header(QNetworkRequest::ContentTypeHeader).toString().toUtf8()))
-        ui->txtResponseData->setPlainText(m_activeRequest->content);
+    bool hasContent = false;
+    auto contentType = reply->header(QNetworkRequest::ContentTypeHeader).toString();
+    if (isContentTypeText(contentType.toUtf8()))
+    {
+        m_activeRequest->content = reply->readAll();
 
-    bool hasContent = m_activeRequest->content.size();
+        hasContent = m_activeRequest->content.size();
+        ui->txtResponseData->setPlainText(m_activeRequest->content);
+    }
+    else if (isContentTypeImage(contentType.toUtf8()))
+    {
+        m_activeRequest->content = "";
+
+        hasContent = true;
+        ui->txtResponseData->setPlainText("The response body is of image type, to view it, use the view as button.");
+    }
+
     ui->btnViewContentAs->setEnabled(hasContent);
 
     if (ui->tabContainer->count() < 2)

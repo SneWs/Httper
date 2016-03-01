@@ -33,9 +33,6 @@
       <property name="tabsClosable">
        <bool>false</bool>
       </property>
-      <property name="tabBarAutoHide">
-       <bool>true</bool>
-      </property>
       <widget class="QWidget" name="tabRequest">
        <attribute name="title">
         <string>&amp;Request Builder</string>

@@ -69,11 +69,11 @@ void SettingsManager::writeSettings(const Settings& settings)
 {
     QJsonArray verbs;
     for (const auto& str : settings.m_verbs)
-        verbs.append(str.c_str());
+        verbs.append(QString(str.c_str()));
 
     QJsonArray contentTypes;
     for (const auto& str : settings.m_contentTypes)
-        contentTypes.append(str.c_str());
+        contentTypes.append(QString(str.c_str()));
 
     // Window settings
     QJsonArray geometry;
@@ -87,7 +87,7 @@ void SettingsManager::writeSettings(const Settings& settings)
 
     QJsonObject httper;
     httper.insert("followRedirects", settings.m_followRedirects);
-    httper.insert("lastUsedUrl", settings.m_lastUsedUrl.c_str());
+    httper.insert("lastUsedUrl", QString(settings.m_lastUsedUrl.c_str()));
     httper.insert("verbs", verbs);
     httper.insert("contentTypes", contentTypes);
     httper.insert("window", window);

@@ -4,11 +4,10 @@
 #
 #-------------------------------------------------
 
-QT += core gui network webkitwidgets
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += core gui network webkitwidgets widgets
 
 !win32 {
-    QMAKE_CXXFLAGS_CXX11 = -std=c++14
+    QMAKE_CXXFLAGS_CXX11 = -std=c++11
 }
 
 CONFIG += c++11

@@ -22,6 +22,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+#include <memory>
+
 namespace
 {
     std::map<std::string, std::string> g_supportedTextContentTypes;
@@ -69,7 +71,7 @@ MainWnd::MainWnd(Settings settings)
     : QMainWindow(nullptr)
     , ui(new Ui::MainWnd)
     , m_networkManager(nullptr)
-    , m_cookieJar(std::make_unique<CookieJar>())
+    , m_cookieJar(std::unique_ptr<CookieJar>(new CookieJar))
     , m_activeRequest(nullptr)
     , m_settings(settings)
     , m_openWebViews()
@@ -526,12 +528,12 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType,
             m_activeRequest->request->abort();
     }
 
-    m_activeRequest = std::make_unique<RequestInfo>(url, verb, contentType, content);
+    m_activeRequest = std::unique_ptr<RequestInfo>(new RequestInfo(url, verb, contentType, content));
     m_activeRequest->headers = headers;
 
     if (!m_networkManager.get())
     {
-        m_networkManager = std::make_unique<QNetworkAccessManager>(this);
+        m_networkManager = std::unique_ptr<QNetworkAccessManager>(new QNetworkAccessManager(this));
 
         QNetworkConfigurationManager manager;
         m_networkManager->setConfiguration(manager.defaultConfiguration());
@@ -548,7 +550,7 @@ void MainWnd::doHttpRequest(QUrl url, QString verb, QString contentType,
     {
         request.setRawHeader("Content-Type", contentType.toUtf8());
 
-        m_activeRequest->sendBuffer = std::make_unique<QBuffer>();
+        m_activeRequest->sendBuffer = std::unique_ptr<QBuffer>(new QBuffer);
         m_activeRequest->sendBuffer->open(QBuffer::ReadWrite);
         m_activeRequest->sendBuffer->write(content.toUtf8());
 

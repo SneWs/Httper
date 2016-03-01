@@ -20,7 +20,7 @@ CookieValues CookieJar::getAllCookies() const
 
     auto cookies = allCookies();
     for (const auto& cookie : cookies)
-        retVal[cookie.name().toStdString()] = cookie.value().toStdString();
+        retVal[std::string(cookie.name().constData(), cookie.name().length())] = std::string(cookie.value().constData(), cookie.value().length());
 
     return retVal;
 }

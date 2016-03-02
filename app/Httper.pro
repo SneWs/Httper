@@ -36,8 +36,15 @@ else {
     UI_DIR = Bin/Release
 }
 
-ICON = ./Images/Httper-icon128x128.icns
-
+linux: {
+    ICON = ./Images/Httper-icon128x128.png
+}
+macx: {
+    ICON = ./Images/Httper-icon128x128.icns
+}
+win32: {
+    RC_ICONS = ./Images/Httper-icon128x128.ico
+}
 SOURCES += main.cpp\
         MainWnd.cpp \
     ComboBoxFocusManager.cpp \

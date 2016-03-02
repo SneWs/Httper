@@ -10,11 +10,17 @@ Httper builds and runs on Linux, OS X and Windows as long as you have a fairly C
 
 # How to build
 Clone the repository
+
 Make a new folder named build, execute qmake and then make.
 
 $ mkdir build
+
 $ cd build
+
 $ qmake ../Httper.pro
+
 $ make
 
+
 If the above succeeds you should be able to find a bin/Release folder containing you're newly built binaries.
+

@@ -4,6 +4,7 @@
 #include "MWidget.h"
 #include "ComboBoxFocusManager.h"
 #include "AboutDlg.h"
+#include "SettingsDlg.h"
 
 #include <QSettings>
 #include <QMenu>
@@ -204,6 +205,7 @@ void MainWnd::connectSignals()
     connect(ui->btnHeadersRemoveSelected, SIGNAL(pressed()), this, SLOT(onHeadersRemoveSelectedButtonClicked()));
 
     // Edit menu items
+    connect(ui->miEditSettings, SIGNAL(triggered(bool)), this, SLOT(showSettingsDialog()));
     connect(ui->miEditRemoveAllCookies, SIGNAL(triggered(bool)), this, SLOT(onClearAllCookies()));
     connect(ui->miEditAutoRedirect, SIGNAL(triggered(bool)), this, SLOT(onToggleFollowRedirects(bool)));
 
@@ -379,6 +381,18 @@ void MainWnd::onHeadersRemoveSelectedButtonClicked()
     auto* item = ui->tblHeaders->currentItem();
     if (item != nullptr)
         ui->tblHeaders->removeRow(item->row());
+}
+
+void MainWnd::showSettingsDialog()
+{
+    SettingsDlg dlg(this);
+    dlg.setModal(true);
+
+    auto result = dlg.exec();
+    if (result == QDialog::Accepted)
+    {
+
+    }
 }
 
 void MainWnd::onClearAllCookies()

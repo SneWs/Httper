@@ -44,7 +44,8 @@ SOURCES += main.cpp\
     CookieJar.cpp \
     Settings.cpp \
     SettingsManager.cpp \
-    AboutDlg.cpp
+    AboutDlg.cpp \
+    SettingsDlg.cpp
 
 HEADERS  += MainWnd.h \
     MWidget.h \
@@ -52,10 +53,12 @@ HEADERS  += MainWnd.h \
     CookieJar.h \
     Settings.h \
     SettingsManager.h \
-    AboutDlg.h
+    AboutDlg.h \
+    SettingsDlg.h
 
 FORMS    += MainWnd.ui \
-    AboutDlg.ui
+    AboutDlg.ui \
+    SettingsDlg.ui
 
 RESOURCES += \
     Resources.qrc

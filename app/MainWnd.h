@@ -78,6 +78,7 @@ protected slots:
     void onHeadersRemoveSelectedButtonClicked();
 
     // Menu item actions
+    void showSettingsDialog();
     void onClearAllCookies();
     void onToggleFollowRedirects(bool checked);
     void onShowAboutDialog();

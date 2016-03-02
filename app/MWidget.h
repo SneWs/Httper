@@ -23,11 +23,13 @@ protected:
 
     virtual void keyPressEvent(QKeyEvent* ev) override
     {
-        if (ev->modifiers() == Qt::AltModifier)
+        if (ev->modifiers() == Qt::ControlModifier)
         {
             if (ev->key() == Qt::Key_W)
                 close();
         }
+        else if (ev->key() == Qt::Key_Escape)
+            close();
     }
 
 };

@@ -52,7 +52,8 @@ SOURCES += main.cpp\
     Settings.cpp \
     SettingsManager.cpp \
     AboutDlg.cpp \
-    SettingsDlg.cpp
+    SettingsDlg.cpp \
+    Base64Dlg.cpp
 
 HEADERS  += MainWnd.h \
     MWidget.h \
@@ -61,11 +62,13 @@ HEADERS  += MainWnd.h \
     Settings.h \
     SettingsManager.h \
     AboutDlg.h \
-    SettingsDlg.h
+    SettingsDlg.h \
+    Base64Dlg.h
 
 FORMS    += MainWnd.ui \
     AboutDlg.ui \
-    SettingsDlg.ui
+    SettingsDlg.ui \
+    Base64Dlg.ui
 
 RESOURCES += \
     Resources.qrc

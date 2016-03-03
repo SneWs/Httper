@@ -28,7 +28,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="tabsClosable">
        <bool>false</bool>
@@ -196,10 +196,17 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="txtFile"/>
+               <widget class="QLineEdit" name="txtFile">
+                <property name="readOnly">
+                 <bool>false</bool>
+                </property>
+                <property name="clearButtonEnabled">
+                 <bool>true</bool>
+                </property>
+               </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton">
+               <widget class="QPushButton" name="btnBrowseForFile">
                 <property name="text">
                  <string>&amp;Browse...</string>
                 </property>
@@ -250,39 +257,6 @@
                 </property>
                 <property name="duplicatesEnabled">
                  <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_7">
-              <item>
-               <widget class="QLabel" name="lblContentOptions">
-                <property name="minimumSize">
-                 <size>
-                  <width>125</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Options</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="chkBase64Encode">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Base64 Encoded</string>
                 </property>
                </widget>
               </item>
@@ -730,7 +704,7 @@
      <x>0</x>
      <y>0</y>
      <width>672</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="miFile">
@@ -778,9 +752,17 @@
     </property>
     <addaction name="miWindowCloseAllButThis"/>
    </widget>
+   <widget class="QMenu" name="miTools">
+    <property name="title">
+     <string>&amp;Tools</string>
+    </property>
+    <addaction name="miToolsBase64Encode"/>
+    <addaction name="miToolsBase64Decode"/>
+   </widget>
    <addaction name="miFile"/>
    <addaction name="miEdit"/>
    <addaction name="miView"/>
+   <addaction name="miTools"/>
    <addaction name="miWindow"/>
    <addaction name="miHelp"/>
   </widget>
@@ -873,6 +855,16 @@
     <string>&amp;Show Statusbar</string>
    </property>
   </action>
+  <action name="miToolsBase64Encode">
+   <property name="text">
+    <string>&amp;Base64 Encode</string>
+   </property>
+  </action>
+  <action name="miToolsBase64Decode">
+   <property name="text">
+    <string>&amp;Base64 Decode</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
@@ -881,9 +873,8 @@
   <tabstop>drpVerb</tabstop>
   <tabstop>tabRequestDetailsContainer</tabstop>
   <tabstop>txtFile</tabstop>
-  <tabstop>pushButton</tabstop>
+  <tabstop>btnBrowseForFile</tabstop>
   <tabstop>drpContentType</tabstop>
-  <tabstop>chkBase64Encode</tabstop>
   <tabstop>txtContentToSend</tabstop>
   <tabstop>txtHeaderKey</tabstop>
   <tabstop>txtHeaderValue</tabstop>
@@ -919,7 +910,7 @@
   <connection>
    <sender>txtFile</sender>
    <signal>returnPressed()</signal>
-   <receiver>pushButton</receiver>
+   <receiver>btnBrowseForFile</receiver>
    <slot>click()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -927,8 +918,8 @@
      <y>219</y>
     </hint>
     <hint type="destinationlabel">
-     <x>555</x>
-     <y>220</y>
+     <x>642</x>
+     <y>243</y>
     </hint>
    </hints>
   </connection>
@@ -939,12 +930,12 @@
    <slot>click()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>281</x>
-     <y>212</y>
+     <x>287</x>
+     <y>244</y>
     </hint>
     <hint type="destinationlabel">
-     <x>597</x>
-     <y>217</y>
+     <x>642</x>
+     <y>244</y>
     </hint>
    </hints>
   </connection>
@@ -955,12 +946,12 @@
    <slot>click()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>424</x>
-     <y>210</y>
+     <x>550</x>
+     <y>244</y>
     </hint>
     <hint type="destinationlabel">
-     <x>585</x>
-     <y>210</y>
+     <x>642</x>
+     <y>244</y>
     </hint>
    </hints>
   </connection>

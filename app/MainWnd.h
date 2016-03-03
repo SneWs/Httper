@@ -23,6 +23,8 @@ class MainWnd;
 
 class MWidget;
 class QWebView;
+class QDialog;
+class Base64Dlg;
 class QTableWidgetItem;
 class QNetworkAccessManager;
 class QBuffer;
@@ -76,11 +78,15 @@ protected slots:
     void onCloseAllAdditionalWindowsMenuItemClicked();
     void onCurrentHeaderItemSelectionChanged(QTableWidgetItem*, QTableWidgetItem*);
     void onHeadersRemoveSelectedButtonClicked();
+    void onOpenFileButtonClicked();
+    void onBase64DialogClosed(QDialog*);
 
     // Menu item actions
     void showSettingsDialog();
     void onClearAllCookies();
     void onToggleFollowRedirects(bool checked);
+    void onBase64Encode();
+    void onBase64Decode();
     void onShowAboutDialog();
 
     void onHttpRequestFinished(QNetworkReply*);
@@ -111,6 +117,7 @@ private:
 
     Settings m_settings;
     std::vector<std::unique_ptr<MWidget>> m_openWebViews;
+    std::vector<std::unique_ptr<Base64Dlg>> m_openBase64Dialogs;
 };
 
 #endif // MAINWND_H

@@ -5,6 +5,7 @@
 #include "ComboBoxFocusManager.h"
 #include "AboutDlg.h"
 #include "SettingsDlg.h"
+#include "Base64Dlg.h"
 
 #include <QSettings>
 #include <QMenu>
@@ -22,6 +23,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QFileDialog>
 
 #include <memory>
 
@@ -76,6 +78,7 @@ MainWnd::MainWnd(Settings settings)
     , m_activeRequest(nullptr)
     , m_settings(settings)
     , m_openWebViews()
+    , m_openBase64Dialogs()
 {
     ui->setupUi(this);
 
@@ -196,6 +199,7 @@ void MainWnd::connectSignals()
 {
     connect(ui->btnSendRequest, SIGNAL(pressed()), this, SLOT(onSendRequestButtonClicked()));
     connect(ui->btnHeaderAddKeyValue, SIGNAL(pressed()), this, SLOT(onAddHeadersKeyValuePairButtonClicked()));
+    connect(ui->btnBrowseForFile, SIGNAL(pressed()), this, SLOT(onOpenFileButtonClicked()));
 
     // Headers table view
     connect(ui->tblHeaders, SIGNAL(currentItemChanged(QTableWidgetItem*,QTableWidgetItem*)),
@@ -208,6 +212,10 @@ void MainWnd::connectSignals()
     connect(ui->miEditSettings, SIGNAL(triggered(bool)), this, SLOT(showSettingsDialog()));
     connect(ui->miEditRemoveAllCookies, SIGNAL(triggered(bool)), this, SLOT(onClearAllCookies()));
     connect(ui->miEditAutoRedirect, SIGNAL(triggered(bool)), this, SLOT(onToggleFollowRedirects(bool)));
+
+    // Tools menu
+    connect(ui->miToolsBase64Encode, SIGNAL(triggered(bool)), this, SLOT(onBase64Encode()));
+    connect(ui->miToolsBase64Decode, SIGNAL(triggered(bool)), this, SLOT(onBase64Decode()));
 
     // Window menu items
     connect(ui->miWindowCloseAllButThis, SIGNAL(triggered(bool)), this, SLOT(onCloseAllAdditionalWindowsMenuItemClicked()));
@@ -383,6 +391,32 @@ void MainWnd::onHeadersRemoveSelectedButtonClicked()
         ui->tblHeaders->removeRow(item->row());
 }
 
+void MainWnd::onOpenFileButtonClicked()
+{
+    QString filter = "Any File (*.*)";
+    QString selectedFile = QFileDialog::getOpenFileName(this, tr("Open File"), QDir::homePath(), filter);
+    if (selectedFile.isEmpty())
+        return;
+
+    QFileInfo file(selectedFile);
+    if (!file.exists())
+    {
+        QMessageBox::warning(this, tr("Error"), tr("File does not exist."), QMessageBox::Ok);
+        return;
+    }
+
+    ui->txtFile->setText(file.absoluteFilePath());
+}
+
+void MainWnd::onBase64DialogClosed(QDialog* dlg)
+{
+    auto newEnd = std::remove_if(m_openBase64Dialogs.begin(), m_openBase64Dialogs.end(), [dlg](std::unique_ptr<Base64Dlg>& ptr) {
+        return ptr.get() == dlg;
+    });
+
+    m_openBase64Dialogs.erase(newEnd, m_openBase64Dialogs.end());
+}
+
 void MainWnd::showSettingsDialog()
 {
     SettingsDlg dlg(this);
@@ -414,6 +448,28 @@ void MainWnd::onToggleFollowRedirects(bool checked)
 {
     m_settings.setFollowRedirects(checked);
     saveSettings();
+}
+
+void MainWnd::onBase64Encode()
+{
+    auto dlg = new Base64Dlg(Base64Dlg::Mode::Encode, this);
+    dlg->setWindowTitle(tr("Base64 Encode"));
+
+    connect(dlg, SIGNAL(onDialogClosed(QDialog*)), this, SLOT(onBase64DialogClosed(QDialog*)));
+    m_openBase64Dialogs.emplace_back(std::unique_ptr<Base64Dlg>(dlg));
+
+    dlg->show();
+}
+
+void MainWnd::onBase64Decode()
+{
+    auto dlg = new Base64Dlg(Base64Dlg::Mode::Decode, this);
+    dlg->setWindowTitle(tr("Base64 Decode"));
+
+    connect(dlg, SIGNAL(onDialogClosed(QDialog*)), this, SLOT(onBase64DialogClosed(QDialog*)));
+    m_openBase64Dialogs.emplace_back(std::unique_ptr<Base64Dlg>(dlg));
+
+    dlg->show();
 }
 
 void MainWnd::onShowAboutDialog()
